@@ -1,4 +1,4 @@
-import {captainIDToName, sidekickIDToName, stadiumIDToName} from './clientUtilities.js'
+import {captainIDToName, sidekickIDToName, stadiumIDToName, compareStatEquality} from './clientUtilities.js'
 
 $(document).ready(function(){
 
@@ -43,5 +43,47 @@ $(document).ready(function(){
         $('#rightSideSteals').text(statsJSON['Right Side Match Stats']['Steals']);
         $('#rightSideSuperStrikes').text(statsJSON['Right Side Match Stats']['Super Strikes']);
         $('#rightSidePerfectPasses').text(statsJSON['Right Side Match Stats']['Perfect Passes']);
+
+        var compareResult = compareStatEquality(statsJSON['Left Side Match Stats']['Goals'], statsJSON['Right Side Match Stats']['Goals'])
+        if (compareResult == 1) {
+            $('#leftSideGoals').addClass('surplusStat')
+        } else {
+            $('#rightSideGoals').addClass('surplusStat')
+        }
+
+        compareResult = compareStatEquality(statsJSON['Left Side Match Stats']['Shots'], statsJSON['Right Side Match Stats']['Shots'])
+        if (compareResult == 1) {
+            $('#leftSideShots').addClass('surplusStat')
+        } else if (compareResult == -1) {
+            $('#rightSideShots').addClass('surplusStat')
+        }
+
+        compareResult = compareStatEquality(statsJSON['Left Side Match Stats']['Hits'], statsJSON['Right Side Match Stats']['Hits'])
+        if (compareResult == 1) {
+            $('#leftSideHits').addClass('surplusStat')
+        } else if (compareResult == -1) {
+            $('#rightSideHits').addClass('surplusStat')
+        }
+
+        compareResult = compareStatEquality(statsJSON['Left Side Match Stats']['Steals'], statsJSON['Right Side Match Stats']['Steals'])
+        if (compareResult == 1) {
+            $('#leftSideSteals').addClass('surplusStat')
+        } else if (compareResult == -1) {
+            $('#rightSideSteals').addClass('surplusStat')
+        }
+
+        compareResult = compareStatEquality(statsJSON['Left Side Match Stats']['Super Strikes'], statsJSON['Right Side Match Stats']['Super Strikes'])
+        if (compareResult == 1) {
+            $('#leftSideSuperStrikes').addClass('surplusStat')
+        } else if (compareResult == -1) {
+            $('#rightSideSuperStrikes').addClass('surplusStat')
+        }
+
+        compareResult = compareStatEquality(statsJSON['Left Side Match Stats']['Perfect Passes'], statsJSON['Right Side Match Stats']['Perfect Passes'])
+        if (compareResult == 1) {
+            $('#leftSidePerfectPasses').addClass('surplusStat')
+        } else if (compareResult == -1) {
+            $('#rightSidePerfectPasses').addClass('surplusStat')
+        }
     }
 })

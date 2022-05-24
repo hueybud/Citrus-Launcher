@@ -11,7 +11,7 @@ var mainWindow;
 const createWindow = () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    minWidth: 800,
+    minWidth: 1000,
     minHeight: 600,
     show: false,
     icon: path.join(__dirname, 'assets', 'citrus logo.png'),
@@ -20,17 +20,10 @@ const createWindow = () => {
     }
   })
 
-  settingsWindow = new BrowserWindow({
-    minWidth: 800,
-    minHeight: 600,
-    show: false
-  })
-
   // and load the index.html of the app.
   mainWindow.loadFile('index.html')
     // Open the DevTools.
   mainWindow.webContents.openDevTools()
-  settingsWindow.loadFile('settings.html');
   mainWindow.maximize();
   mainWindow.show();
   

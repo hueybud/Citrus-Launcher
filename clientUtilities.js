@@ -58,3 +58,15 @@ export function stadiumIDToName(stadiumID) {
             return "N/A"
     }
 }
+
+export function compareStatEquality(stat1, stat2) {
+    stat1 = parseInt(stat1);
+    stat2 = parseInt(stat2);
+    if (stat1 > stat2) {
+        return 1
+    } else if (stat1 < stat2) {
+        return -1
+    } else {
+        return 0
+    }
+}

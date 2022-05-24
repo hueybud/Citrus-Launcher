@@ -9,6 +9,15 @@ async function collectCitrusFiles(citrusReplaysPath, extension) {
     let listOfCitrusFiles;
     try {
       listOfCitrusFiles = fs.readdirSync(citrusReplaysPath);
+      console.log(listOfCitrusFiles);
+      listOfCitrusFiles = listOfCitrusFiles.map(fileName => ({
+        name: fileName,
+        time: fs.statSync(`${citrusReplaysPath}/${fileName}`).mtime.getTime()
+      }))
+      .sort((a, b) => b.time - a.time)
+      .map(file => file.name);
+      console.log(listOfCitrusFiles);
+      
     } catch (error) {
       return error.code
     }
@@ -24,7 +33,7 @@ async function collectCitrusFiles(citrusReplaysPath, extension) {
         }
     }
     // we need to get the JSON into a readable format. right now it has missing quotes and unnecessary commas!
-    //console.log(citrusJSONCollection[0]);
+    //console.log(citrusJSONCollection);
     return citrusJSONCollection;
     //return mockedCollectionJSON;
 }
@@ -190,4 +199,4 @@ var mockedCollectionJSON = [
     }
   ]
 
-//collectCitrusFiles(path.join(os.homedir(), 'Documents', 'Citrus Replays'), '.cit');
+collectCitrusFiles(path.join(os.homedir(), 'Documents', 'Citrus Replays'), '.cit');

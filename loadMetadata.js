@@ -39,21 +39,23 @@ function transformReplayIntoElement(metadataJSON) {
         <div class='row metadataObj'>
             <div class='col-lg mb-2'>
                 <div class='row'>
-                    <div class='col-md-1'>
-                        <div class='characterContainer'>
-                            <img class='captainBannerPhoto' src='./assets/Captains/${captainIDToName(metadataJSON['Left Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/Sidekicks/${sidekickIDToName(metadataJSON['Left Side Sidekick ID'])}.png'>
-                            <span class="versusTextBanner">vs</span>
+                    <div class='col-md-2'>
+                        <div class='multiCharacterContainer'>
+                            <div class='characterContainer'>
+                                <img class='captainBannerPhoto' src='./assets/Captains/${captainIDToName(metadataJSON['Left Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/Sidekicks/${sidekickIDToName(metadataJSON['Left Side Sidekick ID'])}.png'>  
+                            </div>
+                            <div class="versusBanner">
+                                <span class="versusTextBanner">vs</span>
+                            </div>
+                            <div class='characterContainer'>
+                                <img class='captainBannerPhoto' src='./assets/Captains/${captainIDToName(metadataJSON['Right Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/Sidekicks/${sidekickIDToName(metadataJSON['Right Side Sidekick ID'])}.png'>
+                            </div>
                         </div>
                     </div>
-                    <div class='col-md-1'>
-                        <div class='characterContainer'>
-                            <img class='captainBannerPhoto' src='./assets/Captains/${captainIDToName(metadataJSON['Right Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/Sidekicks/${sidekickIDToName(metadataJSON['Right Side Sidekick ID'])}.png'>
-                        </div>
-                    </div>
-                    <div class='col-md-8'>
+                    <div class='col-md-7'>
 
                     </div>
-                    <div class='col-md-2'>
+                    <div class='col-md-3'>
                         <div class='iconsContainerOuter'>
                             <div class='iconsContainerInner'>
                                 <span class="threeDotsIconOuter"><i class="fas fa-ellipsis-h fa-2x threeDotsIcon"></i></span>
@@ -64,9 +66,16 @@ function transformReplayIntoElement(metadataJSON) {
                     </div>
                 </div>
                 <div class='row miscButtons'>
-                    <div class='col-md'>
+                    <div class='col-md-2'>
                         <span class='whiteText dateBanner'><i class="far fa-calendar"></i> ${ourDate} ${ourTime}</span>
+                    </div>
+                    <div class='col-md-2'>
                         <span class='whiteText stadiumBannerText'><i class="fas fa-globe"></i> ${stadiumIDToName(metadataJSON['Stadium ID'])}</span>
+                    </div>
+                    <div class='col-md-1'>
+                        <span class='whiteText scoreBannerText'><i class="fa-solid fa-chalkboard"></i> ${metadataJSON['Score']}</span>
+                    </div>
+                    <div class='col-md-7'>
                         <span class='whiteText fileName'>${metadataJSON['File Name']}</span>
                     </div>
                 </div>
