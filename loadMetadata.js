@@ -135,6 +135,11 @@ document.addEventListener("DOMContentLoaded", async function() {
         console.log($(this).closest('.row').next('.row').find('.fileName').text())
     })
 
+    $('.chartIconOuter').click(function(){
+        var fileName = $(this).closest('.row').next('.row').find('.fileName').text()
+        window.location.href = "matchSummary.html?fileName=" + fileName;
+    })
+
     $('.threeDotsIconOuter').click(function(){
         window.location.href = "settings.html";
     })

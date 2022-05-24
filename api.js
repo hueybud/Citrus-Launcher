@@ -88,6 +88,7 @@ function settingsJSONPropsToErrorNames(propertyName) {
 }
 
 module.exports.collectCitrusFiles = collectCitrusFiles;
+module.exports.getCitrusFileJSON = getCitrusFileJSON;
 module.exports.startPlayback = startPlayback;
 
 var mockedCollectionJSON = [

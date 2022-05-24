@@ -7,7 +7,6 @@ const os = require('os');
 const expressApp = require('./server');
 const fs = require('fs');
 var mainWindow;
-var settingsWindow;
 
 const createWindow = () => {
   // Create the browser window.
@@ -42,12 +41,7 @@ const createWindow = () => {
     app.quit()
   })
 
-  settingsWindow.on('closed', function(e){
-    console.log("closing our window")
-    console.log("closing electron")
-    expressApp.killServer();
-    app.quit()
-  })
+
 
 
 }

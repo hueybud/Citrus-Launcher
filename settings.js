@@ -43,6 +43,9 @@ $(document).ready(function(){
                 if (settingsJSON['pathToReplays'] != "") {
                     $('#replayFolderPath').val(settingsJSON['pathToReplays'])
                 }
+            },
+            error: function(err) {
+                console.log(err);
             }
         })
     }

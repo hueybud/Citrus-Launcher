@@ -1,6 +1,11 @@
 body {
     background: #0B1026
 }
+
+.matchSummaryBody {
+    color: white;
+}
+
 .metadataObj {
     padding-top: 20px;
     padding-left: 20px;
@@ -126,4 +131,16 @@ body {
     flex-grow:2;
     /* And hide the input's outline, so the form looks like the outline */
     border:none;
-  }
+}
+
+.floatRight{
+    float: right
+}
+
+.statValue {
+    color: white !important;
+}
+
+.statName {
+    color: #BBBBBB !important;
+}
