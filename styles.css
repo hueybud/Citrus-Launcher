@@ -103,6 +103,14 @@ body {
     background: #161B36
 }
 
+#refreshIcon {
+    color:  #BBBBBB
+}
+
+#refreshIconOuter :hover {
+    cursor: pointer;
+}
+
 #homeIcon {
     color:  #BBBBBB
 }

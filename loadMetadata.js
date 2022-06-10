@@ -1,9 +1,11 @@
 import {captainIDToName, sidekickIDToName, stadiumIDToName} from './clientUtilities.js'
 
-function initialLoad() {
+function initialLoad(refreshBool) {
     var htmlCollection = "";
     return new Promise(function(resolve, reject){
-        axios.get('http://127.0.0.1:8082/collectCitrusFiles')
+        axios.post('http://127.0.0.1:8082/collectCitrusFiles', {
+            refresh: refreshBool
+        })
         .then(result => {
             if (result.data.length == 0) {
                 htmlCollection = noCitrusFilesFound()
@@ -13,9 +15,7 @@ function initialLoad() {
                 resolve(htmlCollection)
             } else {
                 result.data.map(function(entry, index){
-                    console.log(entry);
-                    var htmlInstance = transformReplayIntoElement(entry);
-                    console.log(htmlInstance);
+                    let htmlInstance = transformReplayIntoElement(entry);
                     htmlCollection += htmlInstance;
                     if (index == result.data.length - 1) {
                         resolve(htmlCollection);
@@ -42,13 +42,13 @@ function transformReplayIntoElement(metadataJSON) {
                     <div class='col-md-2'>
                         <div class='multiCharacterContainer'>
                             <div class='characterContainer'>
-                                <img class='captainBannerPhoto' src='./assets/Captains/${captainIDToName(metadataJSON['Left Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/Sidekicks/${sidekickIDToName(metadataJSON['Left Side Sidekick ID'])}.png'>  
+                                <img class='captainBannerPhoto' src='./assets/Captains/${captainIDToName(metadataJSON['Left Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/Sidekicks/${metadataJSON['Left Side Captain ID'] == 8 ? sidekickIDToName(8) : sidekickIDToName(metadataJSON['Left Side Sidekick ID'])}.png'>  
                             </div>
                             <div class="versusBanner">
                                 <span class="versusTextBanner">vs</span>
                             </div>
                             <div class='characterContainer'>
-                                <img class='captainBannerPhoto' src='./assets/Captains/${captainIDToName(metadataJSON['Right Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/Sidekicks/${sidekickIDToName(metadataJSON['Right Side Sidekick ID'])}.png'>
+                                <img class='captainBannerPhoto' src='./assets/Captains/${captainIDToName(metadataJSON['Right Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/Sidekicks/${metadataJSON['Right Side Captain ID'] == 8 ? sidekickIDToName(8) : sidekickIDToName(metadataJSON['Right Side Sidekick ID'])}.png'>
                             </div>
                         </div>
                     </div>
@@ -114,26 +114,33 @@ function invalidReplayFolder() {
 }
 
 document.addEventListener("DOMContentLoaded", async function() {
-    var metadataBlock = await initialLoad()
+    var myModal = new bootstrap.Modal(document.getElementById('myModal'))
+    myModal.show();
+    var metadataBlock = await initialLoad(false)
+    myModal.hide();
     document.getElementById('container').innerHTML = metadataBlock;
 
-    $('.circleIconOuter').click(function(){
-        var fileName = $(this).closest('.row').next('.row').find('.fileName').text();
+    async function refresh() {
         var myModal = new bootstrap.Modal(document.getElementById('myModal'))
         myModal.show();
+        var metadataBlock = await initialLoad(true)
+        myModal.hide();
+        document.getElementById('container').innerHTML = metadataBlock;
+    }
 
-        setTimeout(() => {
-          myModal.hide();
-        }, 2000);
+    $(document).on('click', '.circleIconOuter', function(){
+        var fileName = $(this).closest('.row').next('.row').find('.fileName').text();
+        var myModal = new bootstrap.Modal(document.getElementById('loadIndividualReplayModal'))
+        myModal.show();
 
         axios.post('http://127.0.0.1:8082/startPlayback', {
             fileName: fileName
         })
         .then(function (response) {
             console.log(response);
+            myModal.hide();
             if (response.data != "Success") {
-                myModal.hide();
-                $('#playbackErrorMessage').text(response.data);
+                $('#playbackErrorMessage').html(response.data);
                 var playbackErrorModal = new bootstrap.Modal(document.getElementById('playbackErrorModal'));
                 playbackErrorModal.show();
             }
@@ -144,13 +151,18 @@ document.addEventListener("DOMContentLoaded", async function() {
         console.log($(this).closest('.row').next('.row').find('.fileName').text())
     })
 
-    $('.chartIconOuter').click(function(){
+    $(document).on('click', '.chartIconOuter', function(){
         var fileName = $(this).closest('.row').next('.row').find('.fileName').text()
+        console.log(fileName);
         window.location.href = "matchSummary.html?fileName=" + fileName;
     })
 
-    $('.threeDotsIconOuter').click(function(){
+    $(document).on('click', '.threeDotsIconOuter', function(){
         window.location.href = "settings.html";
+    })
+
+    $('#refreshIconOuter').click(function(){
+        refresh();
     })
 
 });

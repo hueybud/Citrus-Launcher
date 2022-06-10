@@ -22,9 +22,25 @@
         <div class="modal-content">
           <div class="modal-body">
             <div class="d-flex justify-content-center">
-              <div class="spinner-border" style="width: 5rem; height: 5rem;" role="status">
-                <span class="sr-only">Loading...</span>
-              </div>
+                <span class="spinner-border" style="width: 5rem; height: 5rem;" role="status" aria-hidden="true"></span>
+            </div>
+            <div>
+              <h3 class="text-center mt-2" id="loadPercent">Loading replay files ...</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="loadIndividualReplayModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="d-flex justify-content-center">
+                <span class="spinner-border" style="width: 5rem; height: 5rem;" role="status" aria-hidden="true"></span>
+            </div>
+            <div>
+              <h3 class="text-center mt-2" id="loadPercent">Loading replay ...</h3>
             </div>
           </div>
         </div>

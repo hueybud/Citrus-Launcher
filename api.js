@@ -4,19 +4,20 @@ const etl = require('etl');
 const path = require('path');
 const os = require('os');
 const { exec } = require('child_process');
+const { createHash } = require('crypto');
 
 async function collectCitrusFiles(citrusReplaysPath, extension) {
     let listOfCitrusFiles;
     try {
       listOfCitrusFiles = fs.readdirSync(citrusReplaysPath);
-      console.log(listOfCitrusFiles);
+      //console.log(listOfCitrusFiles);
       listOfCitrusFiles = listOfCitrusFiles.map(fileName => ({
         name: fileName,
         time: fs.statSync(`${citrusReplaysPath}/${fileName}`).mtime.getTime()
       }))
       .sort((a, b) => b.time - a.time)
       .map(file => file.name);
-      console.log(listOfCitrusFiles);
+      //console.log(listOfCitrusFiles);
       
     } catch (error) {
       return error.code
@@ -64,14 +65,48 @@ function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection) 
 }
 
 function startPlayback(fileName){
-  return new Promise(function(resolve, reject){
+  return new Promise(async function(resolve, reject){
     var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
     for (elem in settingsJSON) {
-      if (settingsJSON[elem] == "") {
+      if (settingsJSON[elem] == "" && elem != "isoHash") {
+        // the user is not able to do anything about a missing hash so no point in stopping it
         resolve(settingsJSONPropsToErrorNames(elem));
         return;
       }
     }
+    // comapre hashes now
+
+    // get hash from DTM file
+    var dtmHash;
+    fs.createReadStream(path.join(settingsJSON['pathToReplays'], fileName))
+    .pipe(unzipper.Parse())
+    .pipe(etl.map(async entry => {
+        if (entry.path == "output.dtm") {
+            const content = await entry.buffer();
+            dtmHash = content.slice(113,129).toString('hex')
+            console.log(dtmHash);
+            //citrusJSONCollection.push(JSON.parse(content.toString('utf-8')));
+            //resolve("done");
+        }
+        else {
+            entry.autodrain();
+        }
+    }))
+
+    // get hash from iso file
+    var isoHash = await getMD5ISO(settingsJSON['pathToISO'])
+    if (dtmHash != isoHash) {
+      // mistmatched hashes which could mess with playback
+      var errorMessage = `
+      Mismatched hashes between your replay file ISO and your selected playback ISO.
+      Your replay file was played on an ISO with a hash of ${dtmHash} <b>(${hashToISOName(dtmHash)})</b> and your playback ISO has a hash
+      of ${isoHash} <b>(${hashToISOName(isoHash)})</b>. <p class="mt-2">Please select the appropriate ISO for this replay 
+      via the Settings tab. This page can be accessed by clicking the gear icon in the top right corner.</p>
+      `
+      resolve(errorMessage);
+      return;
+    }
+
     var combinedFileName = '"' + path.join(settingsJSON['pathToReplays'], fileName) + '"';
     var pathToDolphin = '"' + settingsJSON['pathToDolphin'] + '"';
     var pathToISO = '"' + settingsJSON['pathToISO'] + '"';
@@ -96,9 +131,39 @@ function settingsJSONPropsToErrorNames(propertyName) {
   }
 }
 
+function getMD5ISO(filePath) {
+  return new Promise(function(resolve, reject){
+    const hash = createHash('md5')
+    const input = fs.createReadStream(filePath);
+    input.on('readable', () => {
+    // Only one element is going to be produced by the
+    // hash stream.
+    const data = input.read();
+    if (data)
+      hash.update(data);
+    else {
+      resolve(hash.digest('hex'))
+      //console.log(`${hash.digest('hex')} ${filePath}`);
+    }
+  });
+  })
+}
+
+function hashToISOName(hash) {
+  switch (hash) {
+    case "a8d8fcc0c15bfec539398be32b40a69d":
+      return "Vanilla Super Mario Strikers GCM"
+    case "f34aae896bbbba8380282b722bb3a092":
+      return "Citrus Build Super Mario Strikers ISO"
+    default:
+      return "Non-Documented ISO"
+  }
+}
+
 module.exports.collectCitrusFiles = collectCitrusFiles;
 module.exports.getCitrusFileJSON = getCitrusFileJSON;
 module.exports.startPlayback = startPlayback;
+module.exports.getMD5ISO = getMD5ISO;
 
 var mockedCollectionJSON = [
     {
@@ -199,4 +264,4 @@ var mockedCollectionJSON = [
     }
   ]
 
-collectCitrusFiles(path.join(os.homedir(), 'Documents', 'Citrus Replays'), '.cit');
+//collectCitrusFiles(path.join(os.homedir(), 'Documents', 'Citrus Replays'), '.cit');

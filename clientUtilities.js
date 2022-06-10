@@ -33,6 +33,8 @@ export function sidekickIDToName(sidekickID) {
             return "Hammer Bro"
         case 3:
             return "Birdo"
+        case 8:
+            return "Super Team"
         default:
             return "N/A"
     }

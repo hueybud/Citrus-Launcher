@@ -70,6 +70,7 @@ function createSettingsJSON(filename) {
     if (err) {
       var data = {
         "pathToISO": "",
+        "isoHash": "",
         "pathToDolphin": "",
         "pathToReplays": path.join(os.homedir(), 'Documents', 'Citrus Replays')
       }
