@@ -13,7 +13,6 @@ function startServer() {
 }
 function killServer() {
     console.log("Stopping server")
-    req.session.destroy();
     serverVar.close();
 }
 app.get('/', function(req, res){
