@@ -11,10 +11,10 @@ var mainWindow;
 const createWindow = () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    minWidth: 1000,
-    minHeight: 600,
+    minWidth: 1100,
+    minHeight: 700,
     show: false,
-    icon: path.join(__dirname, 'assets', 'citrus logo.png'),
+    icon: path.join(__dirname, 'assets', 'images', 'citrus_32x32.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }
@@ -78,10 +78,10 @@ function createSettingsJSON(filename) {
           if(err) {
               console.log(err);
           }
-          console.log("The file was saved!");
+          console.log("The settings file was created");
       });
     } else {
-      console.log("The file exists!");
+      console.log("The settings file already exists");
     }
   });
 }

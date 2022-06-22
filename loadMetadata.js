@@ -42,41 +42,43 @@ function transformReplayIntoElement(metadataJSON) {
                     <div class='col-md-2'>
                         <div class='multiCharacterContainer'>
                             <div class='characterContainer'>
-                                <img class='captainBannerPhoto' src='./assets/Captains/${captainIDToName(metadataJSON['Left Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/Sidekicks/${metadataJSON['Left Side Captain ID'] == 8 ? sidekickIDToName(8) : sidekickIDToName(metadataJSON['Left Side Sidekick ID'])}.png'>  
+                                <img class='captainBannerPhoto' src='./assets/images/Captains/${captainIDToName(metadataJSON['Left Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/images/Sidekicks/${metadataJSON['Left Side Captain ID'] == 8 ? sidekickIDToName(8) : sidekickIDToName(metadataJSON['Left Side Sidekick ID'])}.png'>  
                             </div>
                             <div class="versusBanner">
                                 <span class="versusTextBanner">vs</span>
                             </div>
                             <div class='characterContainer'>
-                                <img class='captainBannerPhoto' src='./assets/Captains/${captainIDToName(metadataJSON['Right Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/Sidekicks/${metadataJSON['Right Side Captain ID'] == 8 ? sidekickIDToName(8) : sidekickIDToName(metadataJSON['Right Side Sidekick ID'])}.png'>
+                                <img class='captainBannerPhoto' src='./assets/images/Captains/${captainIDToName(metadataJSON['Right Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/images/Sidekicks/${metadataJSON['Right Side Captain ID'] == 8 ? sidekickIDToName(8) : sidekickIDToName(metadataJSON['Right Side Sidekick ID'])}.png'>
                             </div>
                         </div>
                     </div>
-                    <div class='col-md-7'>
+                    <div class='col-md-8'>
 
                     </div>
-                    <div class='col-md-3'>
+                    <div class='col-lg-2'>
                         <div class='iconsContainerOuter'>
                             <div class='iconsContainerInner'>
                                 <span class="threeDotsIconOuter"><i class="fas fa-ellipsis-h fa-2x threeDotsIcon"></i></span>
-                                <span class="chartIconOuter"><i class="fa-solid fa-chart-simple fa-2x chartIcon"></i></span>
-                                <span class="circleIconOuter"><i class="far fa-play-circle fa-2x circleIcon"></i></span>
+                                <span class="chartIconOuter"><i title="Statistics" class="fa-solid fa-chart-simple fa-2x chartIcon"></i></span>
+                                <span class="circleIconOuter"><i title="Start Replay" class="far fa-play-circle fa-2x circleIcon"></i></span>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class='row miscButtons'>
                     <div class='col-md-2'>
-                        <span class='whiteText dateBanner'><i class="far fa-calendar"></i> ${ourDate} ${ourTime}</span>
+                        <span class='whiteText dateBanner'><i title="Date" class="far fa-calendar"></i> ${ourDate} ${ourTime}</span>
                     </div>
                     <div class='col-md-2'>
-                        <span class='whiteText stadiumBannerText'><i class="fas fa-globe"></i> ${stadiumIDToName(metadataJSON['Stadium ID'])}</span>
+                        <span class='whiteText stadiumBannerText'><i title="Stadium" class="fas fa-globe"></i> ${stadiumIDToName(metadataJSON['Stadium ID'])}</span>
                     </div>
                     <div class='col-md-1'>
-                        <span class='whiteText scoreBannerText'><i class="fa-solid fa-chalkboard"></i> ${metadataJSON['Score']}</span>
+                        <span class='whiteText scoreBannerText'><i title="Score" class="fa-solid fa-chalkboard"></i> ${metadataJSON['Score']}</span>
                     </div>
-                    <div class='col-md-7'>
-                        <span class='whiteText fileName'>${metadataJSON['File Name']}</span>
+                    <div class='col-md-4'>
+                    </div>
+                    <div class='col-md-3'>
+                        <span class='whiteText fileName me-3'>${metadataJSON['File Name']}</span>
                     </div>
                 </div>
             </div>
@@ -91,7 +93,9 @@ function noCitrusFilesFound() {
         <div class='col-lg mb-2'>
             <div class='row'>
                 <h1 class="whiteText">No Records Found!</h1>
-                <h3 class="text-warning">Please select the folder that contains your desired Citrus Replay file(s) via the Settings tab. This page can be accessed by clicking the gear icon in the top right corner.</h3>
+                <h3 class="text-warning">We could not find any records in your designated replay folder.</h3>
+                <h4 class="text-warning mt-4">This might be because you haven't played any matches yet on the Project Citrus Dolphin client. If that's the case, once you play a match, replays will appear in your Documents -> Citrus Replays folder. This folder is automatically created for you.</h4>
+                <h4 class="text-warning mt-4">If you have played matches on the Project Citrus Dolphin client, please select the folder that contains your desired Citrus Replay file(s) via the Settings tab. This page can be accessed by clicking the gear icon in the top right corner. By default, replays are saved in Documents -> Citrus Replays.</h4>
             </div>
         </div>
     </div>
@@ -116,6 +120,11 @@ function invalidReplayFolder() {
 document.addEventListener("DOMContentLoaded", async function() {
     var myModal = new bootstrap.Modal(document.getElementById('myModal'))
     myModal.show();
+    // never refresh when we come to index.html
+    // only refresh if they hit the refresh button
+    // however, always store the global citrus collection on the server so that we can return it if it doesn't exist
+    // saves time by giving the user the possibly un-updated info, and if they want it updated, they can refresh
+    // all of this makes going between pages quicker
     var metadataBlock = await initialLoad(false)
     myModal.hide();
     document.getElementById('container').innerHTML = metadataBlock;

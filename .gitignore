@@ -2,3 +2,5 @@ node_modules
 Citrus Launcher-win32-x64
 Citrus Launcher-win32-x64.zip
 temp.js
+*.png
+*.ico

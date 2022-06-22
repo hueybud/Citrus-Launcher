@@ -1,7 +1,7 @@
 var navBarIndex = `
     <nav class="navbar navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
-    <a class="navbar-brand"><img src='./assets/citrus logo.png' width='64px' height='64px'></a>
+    <a class="navbar-brand"><img src='./assets/images/citrus logo.png' width='64px' height='64px'></a>
     <form class="d-flex">
         <span class="me-3" id="refreshIconOuter"><i class="fa-solid fa-arrows-rotate fa-2x" id="refreshIcon"></i>></span>
         <span class="me-3" id="homeIconOuter"><i class="fa-solid fa-house fa-2x" id="homeIcon"></i></span>
@@ -14,7 +14,7 @@ var navBarIndex = `
 var navBar = `
     <nav class="navbar navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
-    <a class="navbar-brand"><img src='./assets/citrus logo.png' width='64px' height='64px'></a>
+    <a class="navbar-brand"><img src='./assets/images/citrus logo.png' width='64px' height='64px'></a>
     <form class="d-flex">
         <span class="me-3" id="homeIconOuter"><i class="fa-solid fa-house fa-2x" id="homeIcon"></i></span>
         <span id="settingsIconOuter"><i class="fa-solid fa-gear fa-2x" id="settingsIcon"></i></span>

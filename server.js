@@ -23,8 +23,6 @@ app.get('/test', function(req, res){
     res.send('Test received');
 })
 app.post('/collectCitrusFiles', async function(req, res){
-    //console.log(req.session.citrusJSONCollection)
-    console.log(req.body.refresh == true)
     if (req.body.refresh == true) {
         var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
         var citrusJSONCollection = await api.collectCitrusFiles(settingsJSON['pathToReplays'], '.cit');
@@ -59,6 +57,7 @@ app.post('/updateReplaysFolder', function(req, res){
             console.log(err)
         }
     });
+    globalCitrusCollection = undefined;
     res.end();
 })
 app.post('/updateISOFile', function(req, res){

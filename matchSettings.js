@@ -22,13 +22,13 @@ $(document).ready(function(){
     function setMatchSummary(statsJSON) {
         var leftSideCaptain = captainIDToName(statsJSON['Left Side Captain ID'])
         var leftSideSidekick = sidekickIDToName(statsJSON['Left Side Sidekick ID'])
-        $('#leftSideCaptainName').attr('src', `./assets/Captains/${leftSideCaptain}.png`)
-        $('#leftSideSidekickName').attr('src', `./assets/Sidekicks/${leftSideSidekick}.png`)
+        $('#leftSideCaptainName').attr('src', `./assets/images/Captains/${leftSideCaptain}.png`)
+        $('#leftSideSidekickName').attr('src', `./assets/images/Sidekicks/${leftSideSidekick}.png`)
 
         var rightSideCaptain = captainIDToName(statsJSON['Right Side Captain ID'])
         var rightSideSidekick = sidekickIDToName(statsJSON['Right Side Sidekick ID'])
-        $('#rightSideCaptainName').attr('src', `./assets/Captains/${rightSideCaptain}.png`)
-        $('#rightSideSidekickName').attr('src', `./assets/Sidekicks/${rightSideSidekick}.png`)
+        $('#rightSideCaptainName').attr('src', `./assets/images/Captains/${rightSideCaptain}.png`)
+        $('#rightSideSidekickName').attr('src', `./assets/images/Sidekicks/${rightSideSidekick}.png`)
 
         $('#leftSideGoals').text(statsJSON['Left Side Match Stats']['Goals']);
         $('#leftSideShots').text(statsJSON['Left Side Match Stats']['Shots']);

@@ -42,15 +42,23 @@ async function collectCitrusFiles(citrusReplaysPath, extension) {
 function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection) {
     const expectedAmountOfFiles = 3;
     var seenFiles = 0;
+    console.log(citrusFile)
     return new Promise(function(resolve, reject){
         fs.createReadStream(path.join(citrusReplaysPath, citrusFile))
         .pipe(unzipper.Parse())
+        .on('error', function(unzipError){
+          resolve("could not unzip cit file")
+        })
         .pipe(etl.map(async entry => {
             seenFiles++;
             if (entry.path == "output.json") {
                 const content = await entry.buffer();
                 //console.log(content.toString('utf-8'));
-                citrusJSONCollection.push(JSON.parse(content.toString('utf-8')));
+                try {
+                  citrusJSONCollection.push(JSON.parse(content.toString('utf-8')));
+                } catch (e) {
+                  resolve("could not parse json")
+                }
                 resolve("done");
             }
             else {
