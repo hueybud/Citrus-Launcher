@@ -34,6 +34,24 @@ $(document).ready(function(){
         $('#rightSideCaptainName').attr('src', `./assets/images/Captains/${rightSideCaptain}.png`)
         $('#rightSideSidekickName').attr('src', `./assets/images/Sidekicks/${rightSideSidekick}.png`)
 
+        if (statsJSON['Left Team Player Info']) {
+            for (var i =0; i < statsJSON['Left Team Player Info'].length; i++) {
+                var pElement = document.createElement('p');
+                pElement.innerHTML = statsJSON['Left Team Player Info'][i];
+                pElement.className = "playerName surplusStat";
+                document.getElementById("leftTeamCharacterContainer").append(pElement);
+            }
+        }
+
+        if (statsJSON['Right Team Player Info']) {
+            for (var i =0; i < statsJSON['Right Team Player Info'].length; i++) {
+                var pElement = document.createElement('p');
+                pElement.innerHTML = statsJSON['Right Team Player Info'][i];
+                pElement.className = "playerName surplusStat";
+                document.getElementById("rightTeamCharacterContainer").append(pElement);
+            }
+        }
+
         $('#leftSideGoals').text(statsJSON['Left Side Match Stats']['Goals']);
         $('#leftSideShots').text(statsJSON['Left Side Match Stats']['Shots']);
         $('#leftSideItemAmount').text(`${statsJSON['Left Team Item Count']}`);

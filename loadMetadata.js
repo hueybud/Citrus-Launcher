@@ -35,6 +35,18 @@ function transformReplayIntoElement(metadataJSON) {
     let rawDate = new Date(metadataJSON['Date']);
     let ourDate = rawDate.toLocaleString('default', {month: 'short', day: 'numeric', year: 'numeric'});
     let ourTime = rawDate.toLocaleTimeString('default', {timeStyle: 'short'})
+    var leftPlayerNamesString = "";
+    var rightPlayerNamesString = ""
+    if (metadataJSON['Left Team Player Info']) {
+        for (var i =0; i < metadataJSON['Left Team Player Info'].length; i++) {
+            leftPlayerNamesString += `<p class="playerName surplusStat">${metadataJSON['Left Team Player Info'][i]}</p>`
+        }
+    }
+    if (metadataJSON['Right Team Player Info']) {
+        for (var i =0; i < metadataJSON['Right Team Player Info'].length; i++) {
+            rightPlayerNamesString += `<p class="playerName surplusStat">${metadataJSON['Right Team Player Info'][i]}</p>`
+        }
+    }
     let markup =  `
         <div class='row metadataObj'>
             <div class='col-lg mb-2'>
@@ -44,15 +56,13 @@ function transformReplayIntoElement(metadataJSON) {
                             <div class="col-md-5">
                                 <div class='characterContainer'>
                                     <img class='captainBannerPhoto' src='./assets/images/Captains/${captainIDToName(metadataJSON['Left Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/images/Sidekicks/${metadataJSON['Left Side Captain ID'] == 8 ? sidekickIDToName(8) : sidekickIDToName(metadataJSON['Left Side Sidekick ID'])}.png'> 
-                                    <p style="position: relative;top: 100px; margin-bottom: 0px" class="surplusStat">P1 - PoolBoi</p>
-                                    <p style="position: relative;top: 100px; margin-bottom: 0px" class="surplusStat">P3 - Gucky</p>
+                                    ${leftPlayerNamesString}
                                 </div>
                             </div>
                             <div class="col-md-5">
                                 <div class='characterContainer'>
                                     <img class='captainBannerPhoto' src='./assets/images/Captains/${captainIDToName(metadataJSON['Right Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/images/Sidekicks/${metadataJSON['Right Side Captain ID'] == 8 ? sidekickIDToName(8) : sidekickIDToName(metadataJSON['Right Side Sidekick ID'])}.png'>
-                                    <p style="position: relative;top: 100px; margin-bottom: 0px" class="surplusStat">P2 - NukeTheWales</p>
-                                    <p style="position: relative;top: 100px; margin-bottom: 0px" class="surplusStat">P4 - Pied</p>
+                                    ${rightPlayerNamesString}
                                 </div>
                             </div>
                         </div>
