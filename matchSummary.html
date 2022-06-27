@@ -16,23 +16,41 @@
   <body class="matchSummaryBody">
     <!--<h1 class="whiteText">Match Summary</h1>-->
     <div id="container">
-        <div class="row">
+      <h2>Match Summary</h2>
+        <div class="row mb-2 mt-4">
             <div class="col-lg">
-                <div class="innerContainer table-responsive ">
-                  <table class="table table-striped mx-auto w-75">
-                    <thead>
-                      <tr>
-                        <th>
-                          <div class='characterContainer'>
-                            <img class='captainBannerPhoto' src='' id="leftSideCaptainName"><img class='sidekickBannerPhoto' src='' id="leftSideSidekickName">
-                          </div>
-                        </th>
-                        <th class="text-center statName">VS</th>
-                        <th>
+                <div class="innerContainer">
+                  <div class="mx-auto w-75">
+                    <div class="row">
+                      <div class="col-lg align-items-start">
+                        <div class='characterContainer'>
+                          <img class='captainBannerPhoto' src='' id="leftSideCaptainName"><img class='sidekickBannerPhoto' src='' id="leftSideSidekickName">
+                          <p class="playerName surplusStat">P1 - PoolBoi</p>
+                          <p class="playerName surplusStat">P4 - NukeTheWales</p>
+                        </div>
+                      </div>
+                      <div class="col-lg align-items-center text-center">
+                        
+                      </div>
+                      <div class="col-lg">
+                        <div style="float: right;">
                           <div class='characterContainer'>
                             <img class='captainBannerPhoto' src='' id="rightSideCaptainName"><img class='sidekickBannerPhoto' src='' id="rightSideSidekickName">
+                            <p class="playerName surplusStat">P2 - Pied</p>
+                            <p class="playerName surplusStat">P4 - Gucky</p>
                           </div>
-                        </th>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="innerContainer table-responsive ">
+                  <table class="table mx-auto w-75" id="matchSummaryTable">
+                    <thead>
+                      <tr>
+                        <th colspan="1"></th>
+                        <th class="text-center statName">VS</th>
+                        <th colspan="1"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -45,6 +63,11 @@
                         <td class="text-center statValue"><h3 id="leftSideShots"></h3></td>
                         <td class="text-center statName"><h3>Total Shots</h3></td>
                         <td class="text-center statValue"><h3 id="rightSideShots"></h3></td>
+                      </tr>
+                      <tr>
+                        <td class="text-center statValue"><h3 id="leftSideItemAmount"></h3></td>
+                        <td class="text-center statName"><h3>Total Items</h3></td>
+                        <td class="text-center statValue"><h3 id="rightSideItemAmount"></h3></td>
                       </tr>
                       <tr>
                         <td class="text-center statValue"><h3 id="leftSideHits"></h3></td>
@@ -70,6 +93,98 @@
                   </table>
                 </div>
             </div>
+        </div>
+        <h2>Goals</h2>
+        <div class="row mb-3">
+          <div class="col-lg-6">
+            <div>
+              <h5 id="leftTeamGoalMessage" class="goalMessage"></h5>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div>
+              <h5 id="rightTeamGoalMessage" class="goalMessage"></h5>
+            </div>
+          </div>
+        </div>
+        <div class="row mb-3 mt-2">
+          <div class="col-lg-6">
+            <div class="goalTableContainer table-responsive" style="max-height: 330px; overflow: auto;">
+              <table class="table table-bordered" id="leftTeamGoalTable">
+                <thead>
+                  <tr>
+                    <th>Goal #</th>
+                    <th>Time Scored</th>
+                  </tr>
+                </thead>
+                <tbody id="leftTeamGoalTableBody">
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="goalTableContainer table-responsive" style="max-height: 330px; overflow: auto;">
+              <table class="table table-bordered" id="rightTeamGoalTable">
+                <thead>
+                  <tr>
+                    <th>Goal #</th>
+                    <th>Time Scored</th>
+                  </tr>
+                </thead>
+                <tbody id="rightTeamGoalTableBody">
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <h2>Items</h2>
+        <div class="row mb-3 mt-2">
+          <div class="col-lg-6">
+            <div>
+              <h5>Most Used Item: <span id="leftTeamMostUsedItem" class="mostUsedItem">Triple Red Shells (6 Times)</span></h5>
+              <button class="btn btn-secondary btn-sm" id="toggleLeftTeamItemView">Toggle to Detailed View</button>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div>
+              <h5>Most Used Item: <span id="rightTeamMostUsedItem" class="mostUsedItem">Triple Red Shells (6 Times)</span></h5>
+              <button class="btn btn-secondary btn-sm" id="toggleRightTeamItemView">Toggle to Detailed View</button>
+            </div>
+          </div>
+        </div>
+        <div class="row mb-4">
+          <div class="col-lg-6">
+            <div class="itemTableContainer table-responsive" style="max-height: 330px; overflow: auto;">
+              <table class="table table-bordered" id="leftTeamItemTable">
+                <thead>
+                  <tr>
+                    <th>Item Type</th>
+                    <th id="leftTeamItemUseColumn"># Of Times Used</th>
+                  </tr>
+                </thead>
+                <tbody id="leftTeamItemTableBody">
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="itemTableContainer table-responsive" style="max-height: 330px; overflow: auto;">
+              <table class="table table-bordered" id="rightTeamItemTable">
+                <thead>
+                  <tr>
+                    <th>Item Type</th>
+                    <th id="rightTeamItemUseColumn"># Of Times Used</th>
+                  </tr>
+                </thead>
+                <tbody id="rightTeamItemTableBody">
+
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
     </div>
   </body>

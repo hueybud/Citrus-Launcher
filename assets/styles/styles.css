@@ -89,11 +89,6 @@ body {
     /*padding-left: 40%;*/
 }
 
-.iconsContainerInner{
-    position:absolute;
-    top:25px;
-}
-
 .fileName {
     float: right;
     /*margin-right: 40px;*/
@@ -150,6 +145,10 @@ body {
     float: right
 }
 
+#matchSummaryTable {
+    color: white !important;
+}
+
 .statValue {
     color: white !important;
 }
@@ -160,4 +159,34 @@ body {
 
 .surplusStat {
     color: orange !important;
+}
+
+.mostUsedItem, .goalMessage {
+    color: orange !important;
+}
+
+#leftTeamItemTable {
+    color: white !important;
+}
+
+#rightTeamItemTable {
+    color: white !important;
+}
+
+#leftTeamGoalTable {
+    color: white !important;
+}
+
+#rightTeamGoalTable {
+    color: white !important;
+}
+
+#leftTeamGoalMessage, #rightTeamGoalMessage {
+    display: none;
+}
+
+.playerName {
+    position: relative;
+    top: 100px; 
+    margin-bottom: 0px
 }

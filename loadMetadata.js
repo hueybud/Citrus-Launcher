@@ -39,23 +39,28 @@ function transformReplayIntoElement(metadataJSON) {
         <div class='row metadataObj'>
             <div class='col-lg mb-2'>
                 <div class='row'>
-                    <div class='col-md-2'>
-                        <div class='multiCharacterContainer'>
-                            <div class='characterContainer'>
-                                <img class='captainBannerPhoto' src='./assets/images/Captains/${captainIDToName(metadataJSON['Left Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/images/Sidekicks/${metadataJSON['Left Side Captain ID'] == 8 ? sidekickIDToName(8) : sidekickIDToName(metadataJSON['Left Side Sidekick ID'])}.png'>  
+                    <div class='col-md-4'>
+                        <div class="row mb-4">
+                            <div class="col-md-5">
+                                <div class='characterContainer'>
+                                    <img class='captainBannerPhoto' src='./assets/images/Captains/${captainIDToName(metadataJSON['Left Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/images/Sidekicks/${metadataJSON['Left Side Captain ID'] == 8 ? sidekickIDToName(8) : sidekickIDToName(metadataJSON['Left Side Sidekick ID'])}.png'> 
+                                    <p style="position: relative;top: 100px; margin-bottom: 0px" class="surplusStat">P1 - PoolBoi</p>
+                                    <p style="position: relative;top: 100px; margin-bottom: 0px" class="surplusStat">P3 - Gucky</p>
+                                </div>
                             </div>
-                            <div class="versusBanner">
-                                <span class="versusTextBanner">vs</span>
-                            </div>
-                            <div class='characterContainer'>
-                                <img class='captainBannerPhoto' src='./assets/images/Captains/${captainIDToName(metadataJSON['Right Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/images/Sidekicks/${metadataJSON['Right Side Captain ID'] == 8 ? sidekickIDToName(8) : sidekickIDToName(metadataJSON['Right Side Sidekick ID'])}.png'>
+                            <div class="col-md-5">
+                                <div class='characterContainer'>
+                                    <img class='captainBannerPhoto' src='./assets/images/Captains/${captainIDToName(metadataJSON['Right Side Captain ID'])}.png'><img class='sidekickBannerPhoto' src='./assets/images/Sidekicks/${metadataJSON['Right Side Captain ID'] == 8 ? sidekickIDToName(8) : sidekickIDToName(metadataJSON['Right Side Sidekick ID'])}.png'>
+                                    <p style="position: relative;top: 100px; margin-bottom: 0px" class="surplusStat">P2 - NukeTheWales</p>
+                                    <p style="position: relative;top: 100px; margin-bottom: 0px" class="surplusStat">P4 - Pied</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class='col-md-8'>
+                    <div class='col-md-6'>
 
                     </div>
-                    <div class='col-lg-2'>
+                    <div class='col-lg-2 align-self-center'>
                         <div class='iconsContainerOuter'>
                             <div class='iconsContainerInner'>
                                 <span class="threeDotsIconOuter"><i class="fas fa-ellipsis-h fa-2x threeDotsIcon"></i></span>

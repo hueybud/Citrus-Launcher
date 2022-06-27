@@ -72,3 +72,47 @@ export function compareStatEquality(stat1, stat2) {
         return 0
     }
 }
+
+export function itemIDToName(itemID) {
+    switch (parseInt(itemID)) {
+        case 0:
+            return "Green Shell"
+        case 1:
+            return "Red Shell"
+        case 2:
+            return "Spiky Shell"
+        case 3:
+            return "Blue Shell"
+        case 4:
+            return "Banana"
+        case 5:
+            return "Bomb"
+        case 6:
+            return "Chain Chomp"
+        case 7:
+            return "Mushroom"
+        case 8:
+            return "Star"
+    }
+}
+
+export function itemIDAndAmountToName(itemID, itemAmount) {
+    var itemType = itemIDToName(itemID);
+    itemAmount = parseInt(itemAmount);
+    if (itemAmount == 1) {
+        return `Single ${itemType}`
+    }
+    if (itemAmount == 3) {
+        return `Triple ${itemType}s`
+    }
+    if (itemAmount == 5) {
+        return `Five ${itemType}s`
+    }
+}
+
+export function timeToString(timeParam) {
+    timeParam = Math.floor(timeParam)
+    var minutes = parseInt(timeParam/60);
+    var seconds = parseInt(timeParam % 60);
+    return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`
+}
