@@ -201,3 +201,11 @@ body {
 #matchSummaryReplayContainer > h6, #matchSummaryReplayContainer > span {
     display: inline
 }
+
+#rulesetElement :hover{
+    cursor: pointer;
+}
+
+.matchStatsModal {
+    color: black !important;
+}

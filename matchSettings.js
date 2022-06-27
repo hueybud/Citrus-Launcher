@@ -1,4 +1,4 @@
-import {captainIDToName, sidekickIDToName, stadiumIDToName, compareStatEquality, itemIDToName, itemIDAndAmountToName, timeToString} from './clientUtilities.js'
+import {captainIDToName, sidekickIDToName, stadiumIDToName, compareStatEquality, itemIDToName, itemIDAndAmountToName, timeToString, matchDifficultyToString, isCitrusISO} from './clientUtilities.js'
 
 $(document).ready(function(){
 
@@ -25,7 +25,7 @@ $(document).ready(function(){
 
     function setMatchSummary(statsJSON) {
         $('#glanceStadium').text(`Stadium : ${stadiumIDToName(statsJSON['Stadium ID'])}`)
-        $('#glanceNetPlay').text(`NetPlay : ${parseInt(statsJSON['NetPlay']) ? "Yes" : "No"}`)
+        $('#glanceNetplay').text(`NetPlay : ${parseInt(statsJSON['Netplay Match']) ? "Yes" : "No"}`)
         var suddenDeath = parseInt(statsJSON['Overtime Not Reached'])
         $('#glanceOvertime').text(`Sudden Death : ${suddenDeath ? "No" : "Yes"}`)
         if (suddenDeath) {
@@ -33,6 +33,8 @@ $(document).ready(function(){
         } else {
             $('#glanceDuration').text(`Duration : ${timeToString(statsJSON['Match Time Elapsed'])}`)
         }
+
+
 
         var leftSideCaptain = captainIDToName(statsJSON['Left Side Captain ID'])
         var leftSideSidekick = sidekickIDToName(statsJSON['Left Side Sidekick ID'])
@@ -131,6 +133,7 @@ $(document).ready(function(){
         setBasicRightItemTable()
         setBasicLeftGoalTable()
         setBasicRightGoalTable()
+        setRuleset()
     }
 
     function setBasicLeftItemTable() {
@@ -317,6 +320,25 @@ $(document).ready(function(){
             document.getElementById("rightTeamGoalTableBody").append(localTR)
         }
     }
+
+    function setRuleset() {
+        $('#rulsetModalDifficulty').text(`${matchDifficultyToString(jsonStats['Match Difficulty'])}`);
+        $('#rulsetModalMatchTime').text(`${timeToString(jsonStats['Match Time Allotted'])}`);
+        $('#rulsetModalItems').text(`${parseInt(jsonStats['Match Items']) ? "On" : "Off"}`)
+        $('#rulsetModalSuperStrikes').text(`${parseInt(jsonStats['Match Super Strikes']) ? "On" : "Off"}`)
+        if (isCitrusISO(jsonStats['Game Hash'])) {
+            $('#rulesetIsCitrusISO').text('Citrus Build ISO')
+            $('#rulesetIsCitrusISO').show();
+            $('#rulsetModalBowser').html(`<span class="text-danger">First To 7 : </span><b>${parseInt(jsonStats['Match Bowser or FTX']) ? "On" : "Off"}</b>`)
+        } else {
+            $('#rulsetModalBowser').html(`<span>Bowser Attack : </span><b>${parseInt(jsonStats['Match Bowser or FTX']) ? "On" : "Off"}</b>`)
+        }
+    }
+
+    $('#rulesetElement').on('click', function(){
+        var myModal = new bootstrap.Modal(document.getElementById('rulesetModal'))
+        myModal.show();
+    })
 
     $(document).on('click', '.circleIconOuter', function(){
         var fileName = jsonStats['File Name'];

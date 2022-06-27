@@ -116,3 +116,25 @@ export function timeToString(timeParam) {
     var seconds = parseInt(timeParam % 60);
     return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`
 }
+
+export function matchDifficultyToString(difficultyLevel) {
+    switch (parseInt(difficultyLevel)) {
+        case 1:
+            return "Rookie"
+        case 2:
+            return "Professional"
+        case 3:
+            return "Superstar"
+        case 4:
+            return "Legend"
+        default:
+            return "Unsure"
+    }
+}
+
+export function isCitrusISO(hash) {
+    if (hash == "f34aae896bbbba8380282b722bb3a092") {
+        return true
+    }
+    return false
+}

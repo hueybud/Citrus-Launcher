@@ -20,21 +20,24 @@
         <div class="col-lg">
           <div id="glanceContent">
             <div class="row">
-              <div class="col-lg-2">
-                <h6 id="glanceStadium">Stadium : The Palace</h6>
+              <div class="col-lg">
+                <h6 id="glanceStadium"></h6>
               </div>
-              <div class="col-lg-2">
-                <h6 id="glanceNetplay">NetPlay : Yes</h6>
+              <div class="col-lg text-center">
+                <h6 id="glanceNetplay"></h6>
               </div>
-              <div class="col-lg-2">
-                <h6 id="glanceOvertime">Sudden Death : Yes</h6>
+              <div class="col-lg text-center">
+                <h6>Rules : <span id="rulesetElement"><u>Ruleset</u></span></h6>
               </div>
-              <div class="col-lg-2">
-                <h6 id="glanceDuration">Duration : 5:13</h6>
+              <div class="col-lg text-center">
+                <h6 id="glanceOvertime"></h6>
               </div>
-              <div class="col-lg-3">
+              <div class="col-lg text-center">
+                <h6 id="glanceDuration"></h6>
+              </div>
+              <div class="col-lg-1">
                 <div id="matchSummaryReplayContainer">
-                  <h6 class="floatRight">Play Replay:</h6>
+                  <h6 class="floatRight">Play Replay :</h6>
                 </div>
               </div>
               <div class="col-lg-1">
@@ -60,7 +63,7 @@
                         
                       </div>
                       <div class="col-lg align-items-end">
-                        <div style="float: right;" class="me-5">
+                        <div style="float: right; margin-right: 40px">
                           <div class='characterContainer' id="rightTeamCharacterContainer">
                             <img class='captainBannerPhoto' src='' id="rightSideCaptainName"><img class='sidekickBannerPhoto' src='' id="rightSideSidekickName">
 
@@ -217,12 +220,12 @@
     <div class="modal" id="loadIndividualReplayModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-body">
+          <div class="modal-body matchStatsModal">
             <div class="d-flex justify-content-center">
-                <span class="spinner-border" style="width: 5rem; height: 5rem; color: black;" role="status"></span>
+                <span class="spinner-border" style="width: 5rem; height: 5rem;" role="status"></span>
             </div>
             <div>
-              <h3 class="text-center mt-2" id="loadPercent" style="color: black;">Loading replay ...</h3>
+              <h3 class="text-center mt-2" id="loadPercent">Loading replay ...</h3>
             </div>
           </div>
         </div>
@@ -236,10 +239,10 @@
             <h5 class="modal-title text-danger">Error</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body matchStatsModal">
             <div class="d-flex justify-content-center">
               <div>
-                <p id="playbackErrorMessage" style="color: black;"></p>
+                <p id="playbackErrorMessage"></p>
               </div>
             </div>
           </div>
@@ -249,5 +252,32 @@
         </div>
       </div>
     </div>
+
+    <div class="modal" id="rulesetModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title text-secondary">Ruleset</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body matchStatsModal">
+            <div class="d-flex justify-content-center">
+              <div id="rulsetModalContainer">
+                <h3 id="rulesetIsCitrusISO" class="surplusStat"></h3>
+                <p>Skill Level : <b id="rulsetModalDifficulty"></b></p>
+                <p>Match Time : <b id="rulsetModalMatchTime"></b></p>
+                <p>Items : <b id="rulsetModalItems"></b></p>
+                <p>Super Strikes : <b id="rulsetModalSuperStrikes"></b></p>
+                <p id="rulsetModalBowser">Bowser Attack : On</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </body>
 </html>
