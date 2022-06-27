@@ -24,6 +24,16 @@ $(document).ready(function(){
     }
 
     function setMatchSummary(statsJSON) {
+        $('#glanceStadium').text(`Stadium : ${stadiumIDToName(statsJSON['Stadium ID'])}`)
+        $('#glanceNetPlay').text(`NetPlay : ${parseInt(statsJSON['NetPlay']) ? "Yes" : "No"}`)
+        var suddenDeath = parseInt(statsJSON['Overtime Not Reached'])
+        $('#glanceOvertime').text(`Sudden Death : ${suddenDeath ? "No" : "Yes"}`)
+        if (suddenDeath) {
+            $('#glanceDuration').text(`Duration : ${timeToString(statsJSON['Match Time Allotted'])}`)
+        } else {
+            $('#glanceDuration').text(`Duration : ${timeToString(statsJSON['Match Time Elapsed'])}`)
+        }
+
         var leftSideCaptain = captainIDToName(statsJSON['Left Side Captain ID'])
         var leftSideSidekick = sidekickIDToName(statsJSON['Left Side Sidekick ID'])
         $('#leftSideCaptainName').attr('src', `./assets/images/Captains/${leftSideCaptain}.png`)
@@ -307,4 +317,26 @@ $(document).ready(function(){
             document.getElementById("rightTeamGoalTableBody").append(localTR)
         }
     }
+
+    $(document).on('click', '.circleIconOuter', function(){
+        var fileName = jsonStats['File Name'];
+        var myModal = new bootstrap.Modal(document.getElementById('loadIndividualReplayModal'))
+        myModal.show();
+
+        axios.post('http://127.0.0.1:8082/startPlayback', {
+            fileName: fileName
+        })
+        .then(function (response) {
+            console.log(response);
+            myModal.hide();
+            if (response.data != "Success") {
+                $('#playbackErrorMessage').html(response.data);
+                var playbackErrorModal = new bootstrap.Modal(document.getElementById('playbackErrorModal'));
+                playbackErrorModal.show();
+            }
+          })
+        .catch(function (error) {
+            console.log(error);
+        });
+    })
 })

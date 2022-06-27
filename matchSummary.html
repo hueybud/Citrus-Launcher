@@ -16,6 +16,34 @@
   <body class="matchSummaryBody">
     <!--<h1 class="whiteText">Match Summary</h1>-->
     <div id="container">
+      <div class="row mb-3 mt-3" id="glanceOuter">
+        <div class="col-lg">
+          <div id="glanceContent">
+            <div class="row">
+              <div class="col-lg-2">
+                <h6 id="glanceStadium">Stadium : The Palace</h6>
+              </div>
+              <div class="col-lg-2">
+                <h6 id="glanceNetplay">NetPlay : Yes</h6>
+              </div>
+              <div class="col-lg-2">
+                <h6 id="glanceOvertime">Sudden Death : Yes</h6>
+              </div>
+              <div class="col-lg-2">
+                <h6 id="glanceDuration">Duration : 5:13</h6>
+              </div>
+              <div class="col-lg-3">
+                <div id="matchSummaryReplayContainer">
+                  <h6 class="floatRight">Play Replay:</h6>
+                </div>
+              </div>
+              <div class="col-lg-1">
+                <span class="circleIconOuter"><i title="Start Replay" class="far fa-play-circle fa-2x circleIcon"></i></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <h2>Match Summary</h2>
         <div class="row mb-2 mt-4">
             <div class="col-lg">
@@ -184,6 +212,42 @@
             </div>
           </div>
         </div>
+    </div>
+
+    <div class="modal" id="loadIndividualReplayModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="d-flex justify-content-center">
+                <span class="spinner-border" style="width: 5rem; height: 5rem; color: black;" role="status"></span>
+            </div>
+            <div>
+              <h3 class="text-center mt-2" id="loadPercent" style="color: black;">Loading replay ...</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal" id="playbackErrorModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title text-danger">Error</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="d-flex justify-content-center">
+              <div>
+                <p id="playbackErrorMessage" style="color: black;"></p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
 </html>
