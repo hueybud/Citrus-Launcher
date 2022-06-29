@@ -351,10 +351,6 @@ $(document).ready(function(){
         [-11.751383,3.716314],
         [-14.559775,-1.214220],
         [-13.421861,3.657639]]
-        const canvasWidth = 600;
-        const canvasHeight = 200;
-        const xWeight = 14.77;
-        const yWeight = -8.48;
         var canvas = document.getElementById("myCanvas");
         var ctx = canvas.getContext("2d");
         for (var i = 0; i < coordinates.length; i++) {
@@ -364,10 +360,12 @@ $(document).ready(function(){
           ctx.stroke();
           ctx.fill();
         }
+        ctx.strokeStyle = "#BBBBBB";
         ctx.moveTo(300, 0);
         ctx.lineTo(300, 348);
         ctx.stroke();
         ctx.beginPath();
+        // if we change dimensions this has to be updated by ratioing area
         ctx.arc(300,174,51.7,0,2*Math.PI);
         ctx.stroke();
         // outer left box
@@ -416,11 +414,22 @@ $(document).ready(function(){
         //ctx.strokeText("1", 295, 105);
     }
 
+    // match stage is 40.62x23.56 (so -20.31 to +20.31 x -11.78 to +11.78)
     function transformX(input) {
-        return (input * 14.77) + 300
+        // x dimension is 20.31
+        // x factor is (width of canvas / 2) / 20.31
+        // additive is width / 2
+        var additive = (document.getElementById('myCanvas').offsetWidth / 2);
+        var weight = additive / 20.31
+        return (input * weight) + additive
     }
     function transformY(input) {
-        return (input * -14.77) + 174
+        // y dimension is 11.78
+        // x factor is (height of canvas / 2) / 11.78
+        // additive is height / 2
+        var additive = (document.getElementById('myCanvas').offsetHeight / 2);
+        var weight = additive / 11.78
+        return (input * -weight) + additive
     }
 
     $('#rulesetElement').on('click', function(){
