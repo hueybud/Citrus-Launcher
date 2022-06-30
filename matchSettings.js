@@ -337,79 +337,80 @@ $(document).ready(function(){
     }
 
     function setGoalGraph() {
-        var coordinates = [[13.981183,-3.400813],
-        [18.110964,3.031374],
-        [1.924551,11.136806],
-        [12.372401,-4.082008],
-        [1.554896,-11.129575],
-        [1.329052,11.130216],
-        [11.875075,-3.724352],
-        [1.376025,-10.842902],
-        [14.192752,2.456968],
-        [13.707708,2.243435],[-13.265551,2.639212],
-        [-7.565029,3.244279],
-        [-11.751383,3.716314],
-        [-14.559775,-1.214220],
-        [-13.421861,3.657639]]
-        var canvas = document.getElementById("myCanvas");
-        var ctx = canvas.getContext("2d");
-        for (var i = 0; i < coordinates.length; i++) {
-          ctx.beginPath();
-          ctx.fillStyle = "#00FF00";
-          ctx.arc(transformX(coordinates[i][0]),transformY(coordinates[i][1]),5,0,2*Math.PI);
-          ctx.stroke();
-          ctx.fill();
+        if (jsonStats['Left Team Missed Shots Info'] && jsonStats['Right Team Missed Shots Info']) {
+            var goalCoordinates = jsonStats["Left Team Goal Info"].concat(jsonStats['Right Team Goal Info'])
+            console.log(goalCoordinates);
+            var missedShotCoordinates = jsonStats['Left Team Missed Shots Info'].concat(jsonStats['Right Team Missed Shots Info'])
+            console.log(missedShotCoordinates)
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+            for (var i = 0; i < goalCoordinates.length; i++) {
+                ctx.beginPath();
+                ctx.fillStyle = "#00FF00";
+                ctx.arc(transformX(goalCoordinates[i][1]),transformY(goalCoordinates[i][2]),5,0,2*Math.PI);
+                ctx.stroke();
+                ctx.fill();
+            }
+            for (var i = 0; i < missedShotCoordinates.length; i++) {
+                ctx.beginPath();
+                ctx.fillStyle = "#FF0000";
+                ctx.arc(transformX(missedShotCoordinates[i][1]),transformY(missedShotCoordinates[i][2]),5,0,2*Math.PI);
+                ctx.stroke();
+                ctx.fill();
+            }
+            ctx.strokeStyle = "#BBBBBB";
+            ctx.moveTo(300, 0);
+            ctx.lineTo(300, 348);
+            ctx.stroke();
+            ctx.beginPath();
+            // if we change dimensions this has to be updated by ratioing area
+            ctx.arc(300,174,51.7,0,2*Math.PI);
+            ctx.stroke();
+            // outer left box
+            ctx.moveTo(transformX(-20.2), transformY(5.2));
+            ctx.lineTo(transformX(-13.5), transformY(5.2));
+            ctx.stroke();
+            ctx.moveTo(transformX(-20.2), transformY(-5.2));
+            ctx.lineTo(transformX(-13.5), transformY(-5.2));
+            ctx.stroke();
+            ctx.moveTo(transformX(-13.5), transformY(-5.2));
+            ctx.lineTo(transformX(-13.5), transformY(5.2));
+            ctx.stroke();
+            // inner left box
+            ctx.moveTo(transformX(-20.2), transformY(2.6));
+            ctx.lineTo(transformX(-17.5), transformY(2.6));
+            ctx.stroke();
+            ctx.moveTo(transformX(-20.2), transformY(-2.6));
+            ctx.lineTo(transformX(-17.5), transformY(-2.6));
+            ctx.stroke();
+            ctx.moveTo(transformX(-17.5), transformY(2.6));
+            ctx.lineTo(transformX(-17.5), transformY(-2.6));
+            ctx.stroke();
+            // needs to be adjusted
+            // outer right box
+            // outer left box
+            ctx.moveTo(transformX(20.2), transformY(5.2));
+            ctx.lineTo(transformX(13.5), transformY(5.2));
+            ctx.stroke();
+            ctx.moveTo(transformX(20.2), transformY(-5.2));
+            ctx.lineTo(transformX(13.5), transformY(-5.2));
+            ctx.stroke();
+            ctx.moveTo(transformX(13.5), transformY(-5.2));
+            ctx.lineTo(transformX(13.5), transformY(5.2));
+            ctx.stroke();
+            // inner left box
+            ctx.moveTo(transformX(20.2), transformY(2.6));
+            ctx.lineTo(transformX(17.5), transformY(2.6));
+            ctx.stroke();
+            ctx.moveTo(transformX(20.2), transformY(-2.6));
+            ctx.lineTo(transformX(17.5), transformY(-2.6));
+            ctx.stroke();
+            ctx.moveTo(transformX(17.5), transformY(2.6));
+            ctx.lineTo(transformX(17.5), transformY(-2.6));
+            ctx.stroke();
+        } else {
+            $('#goalCanvasRow').hide()
         }
-        ctx.strokeStyle = "#BBBBBB";
-        ctx.moveTo(300, 0);
-        ctx.lineTo(300, 348);
-        ctx.stroke();
-        ctx.beginPath();
-        // if we change dimensions this has to be updated by ratioing area
-        ctx.arc(300,174,51.7,0,2*Math.PI);
-        ctx.stroke();
-        // outer left box
-        ctx.moveTo(transformX(-20.2), transformY(5.2));
-        ctx.lineTo(transformX(-13.5), transformY(5.2));
-        ctx.stroke();
-        ctx.moveTo(transformX(-20.2), transformY(-5.2));
-        ctx.lineTo(transformX(-13.5), transformY(-5.2));
-        ctx.stroke();
-        ctx.moveTo(transformX(-13.5), transformY(-5.2));
-        ctx.lineTo(transformX(-13.5), transformY(5.2));
-        ctx.stroke();
-        // inner left box
-        ctx.moveTo(transformX(-20.2), transformY(2.6));
-        ctx.lineTo(transformX(-17.5), transformY(2.6));
-        ctx.stroke();
-        ctx.moveTo(transformX(-20.2), transformY(-2.6));
-        ctx.lineTo(transformX(-17.5), transformY(-2.6));
-        ctx.stroke();
-        ctx.moveTo(transformX(-17.5), transformY(2.6));
-        ctx.lineTo(transformX(-17.5), transformY(-2.6));
-        ctx.stroke();
-        // needs to be adjusted
-        // outer right box
-        // outer left box
-        ctx.moveTo(transformX(20.2), transformY(5.2));
-        ctx.lineTo(transformX(13.5), transformY(5.2));
-        ctx.stroke();
-        ctx.moveTo(transformX(20.2), transformY(-5.2));
-        ctx.lineTo(transformX(13.5), transformY(-5.2));
-        ctx.stroke();
-        ctx.moveTo(transformX(13.5), transformY(-5.2));
-        ctx.lineTo(transformX(13.5), transformY(5.2));
-        ctx.stroke();
-        // inner left box
-        ctx.moveTo(transformX(20.2), transformY(2.6));
-        ctx.lineTo(transformX(17.5), transformY(2.6));
-        ctx.stroke();
-        ctx.moveTo(transformX(20.2), transformY(-2.6));
-        ctx.lineTo(transformX(17.5), transformY(-2.6));
-        ctx.stroke();
-        ctx.moveTo(transformX(17.5), transformY(2.6));
-        ctx.lineTo(transformX(17.5), transformY(-2.6));
-        ctx.stroke();
         //ctx.font = "20px Helvetica Neue";
         //ctx.strokeText("1", 295, 105);
     }
