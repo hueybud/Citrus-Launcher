@@ -53,9 +53,9 @@ export function stadiumIDToName(stadiumID) {
         case 4:
             return "Crater Field"
         case 5:
-            return "The Battle Dome"
-        case 6:
             return "Bowser Stadium"
+        case 6:
+            return "The Battle Dome"
         default:
             return "N/A"
     }
