@@ -9,7 +9,21 @@ var serverVar;
 var globalCitrusCollection;
 
 function startServer() {
-    serverVar = app.listen(8082, () => console.log(`Express server listening on port 8082`));
+    return new Promise(function(resolve, reject){
+        serverVar = app.listen(8082);
+        serverVar.on('listening', function(){
+            console.log(`Express server listening on port 8082`);
+            resolve("server created")
+        })
+        serverVar.on('error', function(err){
+            if (err.code == "EADDRINUSE") {
+                console.log("port is already in use");
+                resolve("server port error")
+            } else {
+                resolve("server error listening")
+            }
+        })
+    })
 }
 function killServer() {
     console.log("Stopping server")
