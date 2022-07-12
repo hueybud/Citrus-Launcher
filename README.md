@@ -4,7 +4,7 @@ Citrus Launcher is a Windows-based desktop application designed to launch Citrus
 
 # Downloading
 
-The application can be downloaded from the Releases tab on GitHub. After unzipping the zip file, the executable can be launched via Citrus Launcher.exe.
+The application can be downloaded from the [Releases](https://github.com/hueybud/Citrus-Launcher/releases) tab on GitHub. After unzipping the zip file, the executable can be launched via Citrus Launcher.exe.
 
 # Usage
 
