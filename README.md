@@ -58,7 +58,7 @@ The page is composed of three **required** fields. The path to the Super Mario S
 
 ![settings page](https://user-images.githubusercontent.com/7491600/178570440-5ec2b013-b073-4a6a-8e4e-5044da26cc5f.png)
 
-### Mistmatch Game ISO
+### Mismatch Game ISO
 
 If you try to play a replay on a different ISO then the one it was recorded with you will receive this error. To fix it, make sure the **Super Mario Strikers ISO** field in Settings has the path to the correct ISO in it.
 
