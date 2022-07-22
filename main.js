@@ -6,6 +6,8 @@ const path = require('path')
 const os = require('os');
 const expressApp = require('./server');
 const fs = require('fs');
+const { exec } = require('child_process');
+const { default: axios } = require('axios');
 var mainWindow;
 
 
@@ -25,6 +27,7 @@ const createWindow = () => {
   //mainWindow.webContents.openDevTools()
   mainWindow.maximize();
   mainWindow.show();
+  checkVersions()
   
   mainWindow.on('closed', function(e){
     console.log("closing our window")
@@ -32,10 +35,6 @@ const createWindow = () => {
     expressApp.killServer();
     app.quit()
   })
-
-
-
-
 }
 
 // This method will be called when Electron has finished
@@ -68,6 +67,63 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+
+async function checkVersions() {
+  var localVersion = await readLocalVersion();
+  var remoteVersion = await getRemoteVersion();
+  console.log(`Local version: ${localVersion}`)
+  console.log(`Remote version: ${remoteVersion}`)
+  if (localVersion != remoteVersion) {
+    promptUpdate(localVersion, remoteVersion)
+  }
+}
+
+function readLocalVersion() {
+  return new Promise(function(resolve, reject){
+    fs.readFile('version.txt', 'utf-8', function(err, data){
+      if (err) {
+        console.log(err)
+        localVersion = "Failed to read local version"
+      } else {
+        localVersion = data.toString();
+      }
+      resolve(localVersion)
+    })
+  })
+}
+
+function getRemoteVersion() {
+  return new Promise(function(resolve, reject){
+    axios.get('https://api.github.com/repos/hueybud/Citrus-Launcher/releases/latest').then(response => {
+      resolve(response.data['tag_name'])
+    }).catch(err => {
+      console.log(err)
+      resolve("Failed to read remote version")
+    })
+  })
+}
+
+function promptUpdate(localVersion, remoteVersion) {
+   options = {
+    type: 'info',
+    icon: './Citrus_256x256.ico',
+    buttons: ['Cancel', 'Yes, please', 'No, thanks'],
+    defaultId: 2,
+    title: 'Citrus Launcher Update',
+    message: 'There is a new version of Citrus Launcher.',
+    detail: `Your version: ${localVersion}\nCurrent version: ${remoteVersion}\n\nTo prevent unwanted errors, it is recommended that you update to the latest version. Would you like to download the latest version?`
+  };
+  
+  dialog.showMessageBox(null, options).then(result => {
+    if (result.response == 1) {
+      // Yes
+      var targetURL = 'https://github.com/hueybud/Citrus-Launcher/releases/latest'
+      var ourCommand = `start microsoft-edge:${targetURL}`;
+      exec(ourCommand)
+    }
+  })
+  
+}
 
 function createSettingsJSON(filename) {
   return new Promise(function(resolve, reject){

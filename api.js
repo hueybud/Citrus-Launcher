@@ -133,7 +133,7 @@ function settingsJSONPropsToErrorNames(propertyName) {
     case "pathToISO":
       return "Please select a Super Mario Strikers ISO via the Settings tab. This page can be accessed by clicking the gear icon in the top right corner."
     case "pathToDolphin":
-      return "Please select the path to your Project Citrus Dolphin executable (.exe) via the Settings tab. This page can be accessed by clicking the gear icon in the top right corner."
+      return "Please select the path to your Citrus Dolphin executable (.exe) via the Settings tab. This page can be accessed by clicking the gear icon in the top right corner."
     case "pathToReplays":
       return "Please select the folder that contains your desired Citrus Replay file(s) via the Settings tab. This page can be accessed by clicking the gear icon in the top right corner."
   }

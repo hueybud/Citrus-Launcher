@@ -169,10 +169,23 @@ $(document).ready(function(){
         var sortedItemMap = new Map([...ourItemMap.entries()].sort((a, b) => b[1] - a[1]));
         var sortedItemArr = Array.from(sortedItemMap);
         console.log(sortedItemArr)
+        var mostUsedItemQuantity = sortedItemArr[0][1]
+        var arrOfMostUsedItems = sortedItemArr.filter(item => item[1] == mostUsedItemQuantity)
+        console.log(arrOfMostUsedItems)
+        var resultArr = []
+        arrOfMostUsedItems.map(function(item){
+            console.log(item)
+            var mostUsedItemArr = item[0];
+            var splitMostUsedItemArr = mostUsedItemArr.split('-')
+            var mostUsedItemType = itemIDAndAmountToName(splitMostUsedItemArr[0], splitMostUsedItemArr[1]);
+            resultArr.push(`${mostUsedItemType} (${mostUsedItemQuantity} Times)`)
+        })
+        /*
         var mostUsedItemArr = sortedItemArr[0];
         var splitMostUsedItemArr = mostUsedItemArr[0].split('-')
         var mostUsedItemType = itemIDAndAmountToName(splitMostUsedItemArr[0], splitMostUsedItemArr[1]);
-        $('#leftTeamMostUsedItem').text(`${mostUsedItemType} (${mostUsedItemArr[1]} Times)`)
+        */
+        $('#leftTeamMostUsedItem').text(`${resultArr.join(", ")}`)
 
         for (var i = 0; i < sortedItemArr.length; i++) {
             var currentArrayElement = sortedItemArr[i];
