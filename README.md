@@ -18,7 +18,7 @@ Replays allow users to watch a match back in Citrus Dolphin as well as drill dow
 
 Users can see a snapshot of all their matches here. Clicking the play icon starts the replay in a Citrus Dolphin window. Clicking the chart icon directs the user to the statistics page, where they will see both general and detailed statistics about the match. The navigation bar contains a link to the [Settings](#settings) page and a refresh button.
 
-![image](https://user-images.githubusercontent.com/7491600/178571934-55b666f9-dabf-4818-a78c-3c96c8b4263a.png)
+![red citrus home screen](https://user-images.githubusercontent.com/7491600/180340190-1a58785c-901b-44cf-9e2a-ee7fe022370f.png)
 
 ## Replays
 
