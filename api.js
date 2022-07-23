@@ -1,10 +1,13 @@
 const fs = require('fs');
 const unzipper = require('unzipper');
+const unzipStream = require('unzip-stream');
 const etl = require('etl');
 const path = require('path');
 const os = require('os');
 const { exec } = require('child_process');
 const { createHash } = require('crypto');
+const { Stream } = require('stream');
+var StringDecoder = require('string_decoder').StringDecoder;
 
 async function collectCitrusFiles(citrusReplaysPath, extension) {
     let listOfCitrusFiles;
@@ -45,29 +48,38 @@ function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection) 
     console.log(citrusFile)
     return new Promise(function(resolve, reject){
         fs.createReadStream(path.join(citrusReplaysPath, citrusFile))
-        .pipe(unzipper.Parse())
+        .pipe(unzipStream.Parse())
         .on('error', function(unzipError){
+          console.log(unzipError)
           resolve("could not unzip cit file")
         })
-        .pipe(etl.map(async entry => {
+        .pipe(Stream.Transform({
+          objectMode: true,
+          transform: async function(entry, e, cb) {
             seenFiles++;
             if (entry.path == "output.json") {
-                const content = await entry.buffer();
-                //console.log(content.toString('utf-8'));
+              var content = ""
+              entry.on('data', function(chunk){
+                content += chunk;
+              })
+              entry.on('end', function(){
                 try {
                   citrusJSONCollection.push(JSON.parse(content.toString('utf-8')));
-                } catch (e) {
+                } catch (err) {
                   resolve("could not parse json")
                 }
                 resolve("done");
+              })
             }
             else {
-                entry.autodrain();
-            }
-            // resolve to keep the code going but let us know no json was found
-            if (seenFiles == expectedAmountOfFiles) {
+              entry.autodrain();
+              cb();
+                // resolve to keep the code going but let us know no json was found
+              if (seenFiles == expectedAmountOfFiles) {
                 resolve("done but no json found")
+              }
             }
+          }
         }))
     })
 }
@@ -85,21 +97,7 @@ function startPlayback(fileName){
     // comapre hashes now
 
     // get hash from DTM file
-    var dtmHash;
-    fs.createReadStream(path.join(settingsJSON['pathToReplays'], fileName))
-    .pipe(unzipper.Parse())
-    .pipe(etl.map(async entry => {
-        if (entry.path == "output.dtm") {
-            const content = await entry.buffer();
-            dtmHash = content.slice(113,129).toString('hex')
-            console.log(dtmHash);
-            //citrusJSONCollection.push(JSON.parse(content.toString('utf-8')));
-            //resolve("done");
-        }
-        else {
-            entry.autodrain();
-        }
-    }))
+    var dtmHash = await getReplayHash(settingsJSON, fileName);
 
     // get hash from iso file
     var isoHash = await getMD5ISO(settingsJSON['pathToISO'])
@@ -125,6 +123,50 @@ function startPlayback(fileName){
       console.log(stdout);
     })
     resolve("Success")
+  })
+}
+
+function getReplayHash(settingsJSON, fileName) {
+  var seenFiles = 0;
+  return new Promise(function(resolve, reject){
+    var dtmHash;
+    fs.createReadStream(path.join(settingsJSON['pathToReplays'], fileName))
+    .pipe(unzipStream.Parse())
+    .on('error', function(unzipError){
+      console.log(unzipError)
+      resolve("could not unzip cit file")
+    })
+    .pipe(Stream.Transform({
+        objectMode: true,
+        transform: function(entry, e, cb) {
+          seenFiles++;
+          if (entry.path == "output.json") {
+            var content = ""
+            entry.on('data', function(chunk){
+              console.log("here")
+              content += chunk;
+            })
+            entry.on('end', function(){
+              try {
+                content = JSON.parse(content.toString('utf-8'))
+              } catch (err) {
+                resolve ("could not parse json")
+              }
+              dtmHash = content['Game Hash']
+              console.log(dtmHash);
+              resolve(dtmHash)
+            })
+          }
+          else {
+            entry.autodrain();
+            cb();
+            // resolve to keep the code going but let us know no json was found
+            if (seenFiles == 3) {
+              resolve("done but no json found")
+            }
+          }
+        }
+    }))
   })
 }
 
@@ -273,3 +315,10 @@ var mockedCollectionJSON = [
   ]
 
 //collectCitrusFiles(path.join(os.homedir(), 'Documents', 'Citrus Replays'), '.cit');
+/*
+async function test() {
+  var result = await getCitrusFileJSON(path.join(os.homedir(), 'Documents', 'Citrus Replays'), 'Game_July_22_2022_17_24_34.cit', [])
+  console.log(result)
+}
+test()
+*/
