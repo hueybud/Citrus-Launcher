@@ -133,7 +133,7 @@ function createSettingsJSON(filename) {
           "pathToISO": "",
           "isoHash": "",
           "pathToDolphin": "",
-          "pathToReplays": path.join(os.homedir(), 'Documents', 'Citrus Replays')
+          "pathToReplays": ""
         }
         fs.writeFile(filename, JSON.stringify(data), function(err) {
             if(err) {

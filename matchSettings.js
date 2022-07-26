@@ -27,11 +27,29 @@ $(document).ready(function(){
         $('#glanceStadium').text(`Stadium : ${stadiumIDToName(statsJSON['Stadium ID'])}`)
         $('#glanceNetplay').text(`NetPlay : ${parseInt(statsJSON['Netplay Match']) ? "Yes" : "No"}`)
         var suddenDeath = parseInt(statsJSON['Overtime Not Reached'])
-        $('#glanceOvertime').text(`Sudden Death : ${suddenDeath ? "No" : "Yes"}`)
+        var timeAlotted = statsJSON['Match Time Allotted'];
+        var timeElapsed = statsJSON['Match Time Elapsed']
+        var suddenDeathBool = false;
+        // there is a scenario we don't cover through all of this where they quit in sudden death *sad face*
+        // translate our jank way of tracking suddeen death to a meaningful boolean
+        // if our json reports that 'Overtime Not Reached' is 1, we definitely did not do sudden death
         if (suddenDeath) {
-            $('#glanceDuration').text(`Duration : ${timeToString(statsJSON['Match Time Allotted'])}`)
+            suddenDeathBool = false;
         } else {
-            $('#glanceDuration').text(`Duration : ${timeToString(statsJSON['Match Time Elapsed'])}`)
+            // however, if it reports 0, saying that we did reach overtime, we need to double check that
+            // when quitting, our flag has no chance of being set to 1, so we need to check our time allotted and elapsed to make the executive decision
+            if (Math.floor(timeElapsed) >= timeAlotted) {
+                suddenDeathBool = true;
+            }
+        }
+        $('#glanceOvertime').text(`Sudden Death : ${suddenDeathBool ? "Yes" : "No"}`)
+        if (suddenDeathBool) {
+            $('#glanceDuration').text(`Duration : ${timeToString(timeElapsed)}`)
+        } else {
+            // if we quit, we want to show the true amount of time the game was played for
+            // if we played a normal match and it wasn't sudden death, time alotted is always smaller than elapsed
+            // we leave out the scenario where they quit in sudden death
+            $('#glanceDuration').text(`Duration : ${timeToString(Math.min(timeElapsed, timeAlotted))}`)
         }
 
 
@@ -91,7 +109,7 @@ $(document).ready(function(){
         var compareResult = compareStatEquality(statsJSON['Left Side Match Stats']['Goals'], statsJSON['Right Side Match Stats']['Goals'])
         if (compareResult == 1) {
             $('#leftSideGoals').addClass('surplusStat')
-        } else {
+        } else if (compareResult == -1) {
             $('#rightSideGoals').addClass('surplusStat')
         }
 
@@ -368,17 +386,17 @@ $(document).ready(function(){
             console.log(missedShotCoordinates)
             var canvas = document.getElementById("myCanvas");
             var ctx = canvas.getContext("2d");
-            for (var i = 0; i < goalCoordinates.length; i++) {
-                ctx.beginPath();
-                ctx.fillStyle = "#00FF00";
-                ctx.arc(transformX(goalCoordinates[i][1]),transformY(goalCoordinates[i][2]),5,0,2*Math.PI);
-                ctx.stroke();
-                ctx.fill();
-            }
             for (var i = 0; i < missedShotCoordinates.length; i++) {
                 ctx.beginPath();
                 ctx.fillStyle = "#FF0000";
                 ctx.arc(transformX(missedShotCoordinates[i][1]),transformY(missedShotCoordinates[i][2]),5,0,2*Math.PI);
+                ctx.stroke();
+                ctx.fill();
+            }
+            for (var i = 0; i < goalCoordinates.length; i++) {
+                ctx.beginPath();
+                ctx.fillStyle = "#00FF00";
+                ctx.arc(transformX(goalCoordinates[i][1]),transformY(goalCoordinates[i][2]),5,0,2*Math.PI);
                 ctx.stroke();
                 ctx.fill();
             }
