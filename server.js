@@ -1,11 +1,12 @@
 const express = require('express');
 var app = express();
-app.use(express.json());
+app.use(express.json({limit: '3mb'}));
 const api = require('./api');
 const path = require('path');
 const fs = require('fs')
 const os = require('os');
 var serverVar;
+var globalCitrusNames;
 var globalCitrusCollection;
 
 function startServer() {
@@ -36,6 +37,34 @@ app.get('/test', function(req, res){
     console.log("we received the test")
     res.send('Test received');
 })
+app.post('/collectCitrusNames', async function(req, res){
+    // first value in returned array is telling the client if we can use the same htmlCollectionArr as last time
+    if (req.body.refresh == true) {
+        var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
+        var citrusNamesList = await api.collectCitrusNames(settingsJSON['pathToReplays'], '.cit')
+        globalCitrusNames = citrusNamesList;
+        res.send([false, globalCitrusNames]);
+    } else {
+        if (!globalCitrusNames) {
+            var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
+            var citrusNamesList = await api.collectCitrusNames(settingsJSON['pathToReplays'], '.cit')
+            globalCitrusNames = citrusNamesList;
+            res.send([false, globalCitrusNames]);
+        } else {
+            res.send([true, globalCitrusNames]);
+        }
+    }
+})
+app.post('/setReplaysHTMLCollectionString', function(req, res){
+    globalCitrusCollection = req.body.collection
+    res.end()
+})
+app.get('/getReplaysHTMLCollectionString', function(req, res){
+    res.send(globalCitrusCollection)
+})
+/*
+    This function is not being used after switching to individual name lookup convention
+*/
 app.post('/collectCitrusFiles', async function(req, res){
     if (req.body.refresh == true) {
         var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
@@ -71,7 +100,8 @@ app.post('/updateReplaysFolder', function(req, res){
             console.log(err)
         }
     });
-    globalCitrusCollection = undefined;
+    globalCitrusNames = undefined;
+    //globalCitrusCollection = undefined;
     res.end();
 })
 app.post('/updateISOFile', function(req, res){
@@ -112,7 +142,7 @@ app.get('/getMatchSummary', async function(req, res){
     var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
     var singularJSONCollection = [];
     await api.getCitrusFileJSON(settingsJSON['pathToReplays'], req.query.fileName, singularJSONCollection);
-    console.log(singularJSONCollection[0]);
+    //console.log(singularJSONCollection[0]);
     res.send(singularJSONCollection[0]);
 })
 module.exports.startServer = startServer;

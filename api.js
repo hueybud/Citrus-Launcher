@@ -7,7 +7,27 @@ const os = require('os');
 const { exec } = require('child_process');
 const { createHash } = require('crypto');
 const { Stream } = require('stream');
-var StringDecoder = require('string_decoder').StringDecoder;
+
+async function getCitrusFilesNames(citrusReplaysPath, extension) {
+  let listOfCitrusFiles;
+  try {
+    listOfCitrusFiles = fs.readdirSync(citrusReplaysPath);
+    //console.log(listOfCitrusFiles);
+    listOfCitrusFiles = listOfCitrusFiles.map(fileName => ({
+      name: fileName,
+      time: fs.statSync(`${citrusReplaysPath}/${fileName}`).mtime.getTime()
+    }))
+    .sort((a, b) => b.time - a.time)
+    .map(file => file.name);
+    //console.log(listOfCitrusFiles);
+    
+  } catch (error) {
+    return error.code
+  }
+  listOfCitrusFiles = listOfCitrusFiles.filter(file => file.match(new RegExp(`.*\.(${extension})$`, 'ig')));
+  console.log(listOfCitrusFiles)
+  return listOfCitrusFiles
+}
 
 async function collectCitrusFiles(citrusReplaysPath, extension) {
     let listOfCitrusFiles;
@@ -26,6 +46,7 @@ async function collectCitrusFiles(citrusReplaysPath, extension) {
       return error.code
     }
     listOfCitrusFiles = listOfCitrusFiles.filter(file => file.match(new RegExp(`.*\.(${extension})$`, 'ig')));
+    console.log(listOfCitrusFiles)
     var citrusJSONCollection = [];
     for (var i = 0; i < listOfCitrusFiles.length; i++) {
         // pass citrusJSONCollection by reference
@@ -209,7 +230,7 @@ function hashToISOName(hash) {
       return "Non-Documented ISO"
   }
 }
-
+module.exports.collectCitrusNames = getCitrusFilesNames;
 module.exports.collectCitrusFiles = collectCitrusFiles;
 module.exports.getCitrusFileJSON = getCitrusFileJSON;
 module.exports.startPlayback = startPlayback;
@@ -314,7 +335,7 @@ var mockedCollectionJSON = [
     }
   ]
 
-//collectCitrusFiles(path.join(os.homedir(), 'Documents', 'Citrus Replays'), '.cit');
+//getCitrusFilesNames(path.join(os.homedir(), 'Documents', 'Citrus Replays'), '.cit');
 /*
 async function test() {
   var result = await getCitrusFileJSON(path.join(os.homedir(), 'Documents', 'Citrus Replays'), 'Game_July_22_2022_17_24_34.cit', [])

@@ -1,26 +1,59 @@
 import {captainIDToName, sidekickIDToName, stadiumIDToName} from './clientUtilities.js'
 
 function initialLoad(refreshBool) {
-    var htmlCollection = "";
+    var htmlCollectionArr = []
+    var decrementer = 0;
     return new Promise(function(resolve, reject){
-        axios.post('http://127.0.0.1:8082/collectCitrusFiles', {
+        axios.post('http://127.0.0.1:8082/collectCitrusNames', {
             refresh: refreshBool
         })
-        .then(result => {
-            if (result.data.length == 0) {
-                htmlCollection = noCitrusFilesFound()
-                resolve(htmlCollection)
-            } else if (result.data == "ENOENT") {
-                htmlCollection = invalidReplayFolder()
-                resolve(htmlCollection)
+        .then(async result => {
+            if (result.data[1].length == 0) {
+                resolve(noCitrusFilesFound())
+            } else if (result.data[1] == "ENOENT") {
+                resolve(invalidReplayFolder())
             } else {
-                result.data.map(function(entry, index){
-                    let htmlInstance = transformReplayIntoElement(entry);
-                    htmlCollection += htmlInstance;
-                    if (index == result.data.length - 1) {
-                        resolve(htmlCollection);
-                    }
-                })
+                // check if names are same as last time
+                if (result.data[0]) {
+                    // this means we didn't update the names list and that we can use the collection
+                    // that is on the server so go ahead and get it
+                    axios.get('http://127.0.0.1:8082/getReplaysHTMLCollectionString')
+                    .then(collectionResult => {
+                        resolve(collectionResult.data)
+                    })
+                    .catch(collectionErr => {
+                        console.log(collectionErr)
+                    })
+                } else {
+                    decrementer = result.data[1].length
+                    result.data[1].map(function(entry, index){
+                        axios.get(`http://127.0.0.1:8082/getMatchSummary?fileName=${entry}`)
+                        .then(jsonResult => {
+                            let htmlInstance = transformReplayIntoElement(jsonResult.data);
+                            var desiredIndex = result.data[1].indexOf(jsonResult.data['File Name'])
+                            htmlCollectionArr[desiredIndex] = htmlInstance
+                            //htmlCollection += htmlInstance;
+                            displayLoadProgress(index + 1, result.data[1].length)
+                        })
+                        .catch(jsonErr => {
+                            console.log(jsonErr)
+                        })
+                        .then(function(){
+                            decrementer--
+                            if (decrementer == 0) {
+                                let stringifyCollection = htmlCollectionArr.join("")
+                                resolve(stringifyCollection);
+                                // post to server our html json collection
+                                axios.post('http://127.0.0.1:8082/setReplaysHTMLCollectionString', {
+                                    collection: stringifyCollection 
+                                })
+                                .catch(postErr => {
+                                    console.log(postErr)
+                                })
+                            }
+                        })
+                    })
+                }
             }
           //console.log(result.data);
         })
@@ -28,6 +61,10 @@ function initialLoad(refreshBool) {
           console.log(err)
         })
     })
+}
+
+function displayLoadProgress(currentProgress, denominator) {
+    $('#loadPercentText').text(`${currentProgress}\\${denominator} files loaded ...`)
 }
 
 function transformReplayIntoElement(metadataJSON) {
