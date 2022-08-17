@@ -15,8 +15,10 @@ async function initialLoad(refreshBool) {
         })
         .then(async result => {
             if (result.data[1].length == 0) {
+                $('#rowFilterColumn').hide()
                 resolve(noCitrusFilesFound())
             } else if (result.data[1] == "ENOENT") {
+                $('#rowFilterColumn').hide()
                 resolve(invalidReplayFolder())
             } else {
                 end = (rowParam*pageParam)
@@ -78,6 +80,7 @@ async function initialLoad(refreshBool) {
                 // move all this into a function once we have what we need
                 console.log(end)
                 $('#subsetOfTotalReplay').text(`Showing ${end-rowParam + 1} - ${Math.min(end, result.data[1].length)} of ${result.data[1].length}`)
+                $('#rowFilterColumn').show()
                 $('#replayRowsDropdownButton').text(rowParam)
                 let paginationElement = createPaginationElement(rowParam, pageParam, result.data[1].length)
                 document.getElementById('someUL').innerHTML = paginationElement
