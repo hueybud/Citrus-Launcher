@@ -6,6 +6,7 @@
     <!-- boostrap 5 and font awesome 6 -->
     <script src="./assets/scripts/axios.min.js"></script>
     <script src="./assets/scripts/jquery-3.6.0.min.js"></script>
+    <script src="./assets/scripts/popper.min.js"></script>
     <link rel="stylesheet" href="./assets/styles/bootstrap.min.css">
     <script src="./assets/scripts/bootstrap.min.js"></script>
     <link rel="stylesheet" href="./assets/fontawesome/css/all.css">
@@ -19,14 +20,32 @@
 
     </div>
     <div id="footer" class="footer">
-      <div>
-        <ul class="pagination justify-content-center" id="someUL">
-          <li class="page-item"><a class="page-link" href="#">Previous</a></li>
-          <li class="page-item"><a class="page-link" href="#">1</a></li>
-          <li class="page-item"><a class="page-link" href="#">2</a></li>
-          <li class="page-item"><a class="page-link" href="#">3</a></li>
-          <li class="page-item"><a class="page-link" href="#">Next</a></li>
-        </ul>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-4 d-flex align-items-center">
+            <div class="dropdown dropup">
+              <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="replayRowsDropdownButton" data-bs-toggle="dropdown" aria-expanded="false">
+                25
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item rowFilterOption" id="dropdownOption0">5</a></li>
+                <li><a class="dropdown-item rowFilterOption" id="dropdownOption1">25</a></li>
+                <li><a class="dropdown-item rowFilterOption" id="dropdownOption2">50</a></li>
+                <li><a class="dropdown-item rowFilterOption" id="dropdownOption3">100</a></li>
+              </ul>
+              <span>Replays Per Page</span>
+            </div>
+          </div>
+          <div class="col-lg-4 d-flex align-items-center justify-content-center">
+            <span id="subsetOfTotalReplay"></span>
+          </div>
+          <div class="col-lg-4">
+            <div>
+              <ul class="pagination justify-content-end" id="someUL">
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal" id="myModal" tabindex="-1">

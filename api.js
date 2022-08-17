@@ -66,7 +66,6 @@ async function collectCitrusFiles(citrusReplaysPath, extension) {
 function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection) {
     const expectedAmountOfFiles = 3;
     var seenFiles = 0;
-    console.log(citrusFile)
     return new Promise(function(resolve, reject){
         fs.createReadStream(path.join(citrusReplaysPath, citrusFile))
         .pipe(unzipStream.Parse())

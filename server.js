@@ -8,6 +8,9 @@ const os = require('os');
 var serverVar;
 var globalCitrusNames;
 var globalCitrusCollection;
+// initialize the row and page filters to 25 and 1 respectively
+var globalRowParam = 25;
+var globalPageParam = 1;
 
 function startServer() {
     return new Promise(function(resolve, reject){
@@ -39,16 +42,20 @@ app.get('/test', function(req, res){
 })
 app.post('/collectCitrusNames', async function(req, res){
     // first value in returned array is telling the client if we can use the same htmlCollectionArr as last time
-    if (req.body.refresh == true) {
+    if (req.body.refresh == true || (globalRowParam != req.body.rowParam) || (globalPageParam != req.body.pageParam)) {
         var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
         var citrusNamesList = await api.collectCitrusNames(settingsJSON['pathToReplays'], '.cit')
         globalCitrusNames = citrusNamesList;
+        globalRowParam = req.body.rowParam;
+        globalPageParam = req.body.pageParam;
         res.send([false, globalCitrusNames]);
     } else {
         if (!globalCitrusNames) {
             var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
             var citrusNamesList = await api.collectCitrusNames(settingsJSON['pathToReplays'], '.cit')
             globalCitrusNames = citrusNamesList;
+            globalRowParam = req.body.rowParam;
+            globalPageParam = req.body.pageParam;
             res.send([false, globalCitrusNames]);
         } else {
             res.send([true, globalCitrusNames]);
@@ -61,6 +68,18 @@ app.post('/setReplaysHTMLCollectionString', function(req, res){
 })
 app.get('/getReplaysHTMLCollectionString', function(req, res){
     res.send(globalCitrusCollection)
+})
+app.post('/setRowParam', function(req, res){
+    globalRowParam = req.body.rowParam
+})
+app.get('/getGlobalRowParam', function(req, res){
+    res.send({"rowParam": globalRowParam || 5})
+})
+app.post('/setPageParam', function(req, res){
+    globalPageParam = req.body.pageParam
+})
+app.get('/getGlobalPageParam', function(req, res){
+    res.send({"pageParam": globalPageParam || 1})
 })
 /*
     This function is not being used after switching to individual name lookup convention

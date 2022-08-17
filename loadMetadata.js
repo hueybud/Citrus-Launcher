@@ -1,11 +1,17 @@
 import {captainIDToName, sidekickIDToName, stadiumIDToName} from './clientUtilities.js'
 
-function initialLoad(refreshBool) {
+async function initialLoad(refreshBool) {
     var htmlCollectionArr = []
     var decrementer = 0;
+    var queryParams = new URLSearchParams(window.location.search)
+    var rowParam = await getRowParam(queryParams);
+    var pageParam = await getPageParam(queryParams);
+    var end;
     return new Promise(function(resolve, reject){
         axios.post('http://127.0.0.1:8082/collectCitrusNames', {
-            refresh: refreshBool
+            refresh: refreshBool,
+            rowParam: rowParam,
+            pageParam: pageParam
         })
         .then(async result => {
             if (result.data[1].length == 0) {
@@ -13,6 +19,7 @@ function initialLoad(refreshBool) {
             } else if (result.data[1] == "ENOENT") {
                 resolve(invalidReplayFolder())
             } else {
+                end = (rowParam*pageParam)
                 // check if names are same as last time
                 if (result.data[0]) {
                     // this means we didn't update the names list and that we can use the collection
@@ -25,15 +32,17 @@ function initialLoad(refreshBool) {
                         console.log(collectionErr)
                     })
                 } else {
-                    decrementer = result.data[1].length
-                    result.data[1].map(function(entry, index){
+                    // slice here so that we know what we are showing out of
+                    var refinedFileCollection = result.data[1].slice(end-rowParam, end)
+                    decrementer = refinedFileCollection.length
+                    refinedFileCollection.map(function(entry, index){
                         axios.get(`http://127.0.0.1:8082/getMatchSummary?fileName=${entry}`)
                         .then(jsonResult => {
                             let htmlInstance = transformReplayIntoElement(jsonResult.data);
-                            var desiredIndex = result.data[1].indexOf(jsonResult.data['File Name'])
+                            var desiredIndex = refinedFileCollection.indexOf(jsonResult.data['File Name'])
                             htmlCollectionArr[desiredIndex] = htmlInstance
                             //htmlCollection += htmlInstance;
-                            displayLoadProgress(index + 1, result.data[1].length)
+                            displayLoadProgress(index + 1, refinedFileCollection.length)
                         })
                         .catch(jsonErr => {
                             console.log(jsonErr)
@@ -47,13 +56,31 @@ function initialLoad(refreshBool) {
                                 axios.post('http://127.0.0.1:8082/setReplaysHTMLCollectionString', {
                                     collection: stringifyCollection 
                                 })
-                                .catch(postErr => {
-                                    console.log(postErr)
+                                .catch(postCollectingStringErr => {
+                                    console.log(postCollectingStringErr)
+                                })
+                                axios.post('http://127.0.0.1:8082/setRowParam', {
+                                    rowParam: rowParam
+                                })
+                                .catch(postRowErr => {
+                                    console.log(postRowErr)
+                                })
+                                axios.post('http://127.0.0.1:8082/setPageParam', {
+                                    pageParam: pageParam
+                                })
+                                .catch(postPageErr => {
+                                    console.log(postPageErr)
                                 })
                             }
                         })
                     })
-                }
+                }        
+                // move all this into a function once we have what we need
+                console.log(end)
+                $('#subsetOfTotalReplay').text(`Showing ${end-rowParam + 1} - ${Math.min(end, result.data[1].length)} of ${result.data[1].length}`)
+                $('#replayRowsDropdownButton').text(rowParam)
+                let paginationElement = createPaginationElement(rowParam, pageParam, result.data[1].length)
+                document.getElementById('someUL').innerHTML = paginationElement
             }
           //console.log(result.data);
         })
@@ -61,6 +88,155 @@ function initialLoad(refreshBool) {
           console.log(err)
         })
     })
+}
+
+function getRowParam(queryParams) {
+    return new Promise(function(resolve, reject){
+        // we might not have provided it if we are coming from a page that isn't index (settings)
+        if (!queryParams.get('row')) {
+            axios.get('http://127.0.0.1:8082/getGlobalRowParam')
+            .then(resultRowParam => {
+                resolve(resultRowParam.data.rowParam)
+            })
+            .catch(err => {
+                console.log(err)
+                resolve(25)
+            })
+        } else {
+            resolve(queryParams.get('row'))
+        }
+    })
+}
+
+function getPageParam(queryParams) {
+    return new Promise(function(resolve, reject){
+        // we might not have provided it if we are coming from a page that isn't index (settings)
+        if (!queryParams.get('page')) {
+            axios.get('http://127.0.0.1:8082/getGlobalPageParam')
+            .then(resultPageParam => {
+                resolve(resultPageParam.data.pageParam)
+            })
+            .catch(err => {
+                console.log(err)
+                resolve(1)
+            })
+        } else {
+            resolve(queryParams.get('page'))
+        }
+    })
+}
+
+function createPaginationElement(rowParam, pageParam, totalAmountOfReplays) {
+    rowParam = parseInt(rowParam)
+    pageParam = parseInt(pageParam)
+    totalAmountOfReplays = parseInt(totalAmountOfReplays)
+    var maxPageAmount = Math.ceil(totalAmountOfReplays/rowParam)
+    var paginationElement = ``
+    if (pageParam != 1) {
+        paginationElement += `
+            <li class="page-item">
+            <a class="page-link" href="index.html?row=${rowParam}&page=${pageParam-1}" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+            </a>
+            </li>
+        `
+    }
+    if (pageParam > 2) {
+        paginationElement += `
+            <li class="page-item"><a class="page-link" href="index.html?row=${rowParam}&page=1">1</a></li>
+        `
+        paginationElement += `
+            <li class="page-item"><a class="page-link">...</a></li>
+        `
+    }
+    if (pageParam == maxPageAmount) {
+        // try to add two before it
+        if (pageParam - 2 >= 1) {
+            paginationElement += `
+                <li class="page-item"><a class="page-link" href="index.html?row=${rowParam}&page=${pageParam - 2}">${pageParam - 2}</a></li>
+            `
+        }
+        if (pageParam - 1 >= 1) {
+            paginationElement += `
+                <li class="page-item"><a class="page-link" href="index.html?row=${rowParam}&page=${pageParam - 1}">${pageParam - 1}</a></li>
+            `
+        }
+        paginationElement += `
+            <li class="page-item active"><a class="page-link" href="index.html?row=${rowParam}&page=${pageParam}">${pageParam}</a></li>
+        `
+    } else {
+    // add the three links
+    let placement = pageParam % 3
+    let counter = 0;
+    switch (placement) {
+        case 1:
+            if (pageParam != 1) {
+                paginationElement += `
+                    <li class="page-item"><a class="page-link" href="index.html?row=${rowParam}&page=${pageParam - 1}">${pageParam - 1}</a></li>
+                `
+            }
+            paginationElement += `
+                <li class="page-item active"><a class="page-link" href="index.html?row=${rowParam}&page=${pageParam}">${pageParam}</a></li>
+            `
+            console.log(maxPageAmount, pageParam + 1)
+            if (pageParam + 1 <= maxPageAmount) {
+                paginationElement += `
+                    <li class="page-item"><a class="page-link" href="index.html?row=${rowParam}&page=${pageParam + 1}">${pageParam + 1}</a></li>
+                `
+            }
+            if (pageParam == 1 && maxPageAmount >= 3) {
+                paginationElement += `
+                    <li class="page-item"><a class="page-link" href="index.html?row=${rowParam}&page=${pageParam + 2}">${pageParam + 2}</a></li>
+                `
+            }
+            break;
+        case 2:
+            paginationElement += `
+                <li class="page-item"><a class="page-link" href="index.html?row=${rowParam}&page=${pageParam - 1}">${pageParam - 1}</a></li>
+            `
+            paginationElement += `
+                <li class="page-item active"><a class="page-link" href="index.html?row=${rowParam}&page=${pageParam}">${pageParam}</a></li>
+            `
+            console.log(maxPageAmount, pageParam + 1)
+            if (pageParam + 1 <= maxPageAmount) {
+                paginationElement += `
+                    <li class="page-item"><a class="page-link" href="index.html?row=${rowParam}&page=${pageParam + 1}">${pageParam + 1}</a></li>
+                `
+            }
+            break;
+        case 0:
+            paginationElement += `
+                <li class="page-item"><a class="page-link" href="index.html?row=${rowParam}&page=${pageParam - 1}">${pageParam - 1}</a></li>
+            `
+            paginationElement += `
+                <li class="page-item active"><a class="page-link" href="index.html?row=${rowParam}&page=${pageParam}">${pageParam}</a></li>
+            `
+            if (pageParam + 1 <= maxPageAmount) {
+                paginationElement += `
+                    <li class="page-item"><a class="page-link" href="index.html?row=${rowParam}&page=${pageParam + 1}">${pageParam + 1}</a></li>
+                `
+            }
+            break;
+    }
+    }
+    if (pageParam <= maxPageAmount - 2) {
+        paginationElement += `
+            <li class="page-item"><a class="page-link">...</a></li>
+        `
+        paginationElement += `
+            <li class="page-item"><a class="page-link" href="index.html?row=${rowParam}&page=${maxPageAmount}">${maxPageAmount}</a></li>
+        `
+    }
+    if (pageParam != maxPageAmount) {
+        paginationElement += `
+            <li class="page-item">
+            <a class="page-link" href="index.html?row=${rowParam}&page=${pageParam+1}" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+            </a>
+            </li>
+        `
+    }
+    return paginationElement
 }
 
 function displayLoadProgress(currentProgress, denominator) {
@@ -224,6 +400,11 @@ document.addEventListener("DOMContentLoaded", async function() {
 
     $('#refreshIconOuter').click(function(){
         refresh();
+    })
+
+    $('.rowFilterOption').click(function(e){
+        let rowAmount = parseInt(e.currentTarget.innerText)
+        window.location.href = `index.html?row=${rowAmount}&page=1`
     })
 
 });
