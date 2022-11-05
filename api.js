@@ -29,6 +29,7 @@ async function getCitrusFilesNames(citrusReplaysPath, extension) {
   return listOfCitrusFiles
 }
 
+// not being used anymore
 async function collectCitrusFiles(citrusReplaysPath, extension) {
     let listOfCitrusFiles;
     try {
@@ -334,7 +335,7 @@ var mockedCollectionJSON = [
     }
   ]
 
-//getCitrusFilesNames(path.join(os.homedir(), 'Documents', 'Citrus Replays'), '.cit');
+getCitrusFilesNames(path.join(os.homedir(), 'Documents', 'Dolphin Emulator', 'CitrusReplays'), '.cit');
 /*
 async function test() {
   var result = await getCitrusFileJSON(path.join(os.homedir(), 'Documents', 'Citrus Replays'), 'Game_July_22_2022_17_24_34.cit', [])

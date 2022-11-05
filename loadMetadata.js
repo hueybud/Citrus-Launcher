@@ -40,8 +40,10 @@ async function initialLoad(refreshBool) {
                     refinedFileCollection.map(function(entry, index){
                         axios.get(`http://127.0.0.1:8082/getMatchSummary?fileName=${entry}`)
                         .then(jsonResult => {
-                            let htmlInstance = transformReplayIntoElement(jsonResult.data);
-                            var desiredIndex = refinedFileCollection.indexOf(jsonResult.data['File Name'])
+                            console.log(jsonResult)
+                            // users might have renamed the file so it's not reliable to use the json info
+                            let htmlInstance = transformReplayIntoElement(jsonResult.data, entry);
+                            var desiredIndex = refinedFileCollection.indexOf(entry)
                             htmlCollectionArr[desiredIndex] = htmlInstance
                             //htmlCollection += htmlInstance;
                             displayLoadProgress(index + 1, refinedFileCollection.length)
@@ -246,7 +248,7 @@ function displayLoadProgress(currentProgress, denominator) {
     $('#loadPercentText').text(`${currentProgress}\\${denominator} files loaded ...`)
 }
 
-function transformReplayIntoElement(metadataJSON) {
+function transformReplayIntoElement(metadataJSON, correctFileName) {
     //console.log(metadataJSON)
     let rawDate = new Date(metadataJSON['Date']);
     let ourDate = rawDate.toLocaleString('default', {month: 'short', day: 'numeric', year: 'numeric'});
@@ -309,7 +311,7 @@ function transformReplayIntoElement(metadataJSON) {
                     <div class='col-md-4'>
                     </div>
                     <div class='col-md-3'>
-                        <span class='whiteText fileName me-3'>${metadataJSON['File Name']}</span>
+                        <span class='whiteText fileName me-3'>${correctFileName}</span>
                     </div>
                 </div>
             </div>
