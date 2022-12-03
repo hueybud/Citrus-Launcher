@@ -10,7 +10,7 @@ The application can be downloaded from the [Releases](https://github.com/hueybud
 
 The application loads replay files (.CIT file extension) that are created from the Citrus Dolphin build. This is a custom version of Dolphin Emulator, a popular emulator used to play games from the Nintendo GameCube and Wii consoles. A link to the releases for Citrus Dolphin can be found here.
 
-The default path that the application scans for the replay files is C:\Users\\*Your Username*\Documents\Citrus Replays. This can be changed at any time through the [Settings](#settings) tab located in the right corner.
+The default path that the application scans for the replay files is C:\Users\\*Your Username*\Documents\Dolphin Emulator\Citrus Replays. This can be changed at any time through the [Settings](#settings) tab located in the right corner.
 
 Replays allow users to watch a match back in Citrus Dolphin as well as drill down to see detailed statistics about the match.
 
@@ -54,7 +54,7 @@ The Settings page can be accessed at any time by clicking on the gear icon in th
 
 ![settings bar](https://user-images.githubusercontent.com/7491600/178569095-8d723480-1ea7-490c-b66a-5af1ad1e27ff.PNG)
 
-The page is composed of three **required** fields. The path to the Super Mario Strikers ISO you played your desired replay on, the path to your Citrus Dolphin.exe (it needs to be the actual executable file, not just the folder), and the folder that contains your replays. The replay folder field is defaulted to C:\Users\\*Your Username*\Documents\Citrus Replays.
+The page is composed of three **required** fields. The path to the Super Mario Strikers ISO you played your desired replay on, the path to your Citrus Dolphin.exe (it needs to be the actual executable file, not just the folder), and the folder that contains your replays. The replay folder field is defaulted to C:\Users\\*Your Username*\Documents\Dolphin Emulator\Citrus Replays.
 
 ![settings page](https://user-images.githubusercontent.com/7491600/178570440-5ec2b013-b073-4a6a-8e4e-5044da26cc5f.png)
 

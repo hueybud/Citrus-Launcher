@@ -327,8 +327,8 @@ function noCitrusFilesFound() {
             <div class='row'>
                 <h1 class="whiteText">No Records Found!</h1>
                 <h3 class="text-warning">We could not find any records in your designated replay folder.</h3>
-                <h4 class="text-warning mt-4">This might be because you haven't played any matches yet on the Citrus Dolphin client. If that's the case, once you play a match, replays will appear in your Documents -> Citrus Replays folder. This folder is automatically created for you.</h4>
-                <h4 class="text-warning mt-4">If you have played matches on the Citrus Dolphin client, please select the folder that contains your desired Citrus Replay file(s) via the Settings tab. This page can be accessed by clicking the gear icon in the top right corner. By default, replays are saved in Documents -> Citrus Replays.</h4>
+                <h4 class="text-warning mt-4">This might be because you haven't played any matches yet on the Citrus Dolphin client. If that's the case, once you play a match, replays will appear in your Documents -> Dolphin Emulator -> Citrus Replays folder. This folder is automatically created for you.</h4>
+                <h4 class="text-warning mt-4">If you have played matches on the Citrus Dolphin client, please select the folder that contains your desired Citrus Replay file(s) via the Settings tab. This page can be accessed by clicking the gear icon in the top right corner. By default, replays are saved in Documents -> Dolphin Emulator -> Citrus Replays.</h4>
             </div>
         </div>
     </div>
