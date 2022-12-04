@@ -90,21 +90,50 @@ $(document).ready(function(){
             }
         }
 
+        let leftTeamGoalToShotRatio = Math.round((statsJSON['Left Side Match Stats']['Goals']/statsJSON['Left Side Match Stats']['Shots']) * 100)
+        if (isNaN(leftTeamGoalToShotRatio)) {
+            leftTeamGoalToShotRatio = 0;
+        }
+        let rightTeamGoalToShotRatio = Math.round((statsJSON['Right Side Match Stats']['Goals']/statsJSON['Right Side Match Stats']['Shots']) * 100)
+        if (isNaN(rightTeamGoalToShotRatio)) {
+            rightTeamGoalToShotRatio = 0;
+        }
+
         $('#leftSideGoals').text(statsJSON['Left Side Match Stats']['Goals']);
         $('#leftSideShots').text(statsJSON['Left Side Match Stats']['Shots']);
+        $('#leftSideShotPercentage').text(statsJSON['Left Side Match Stats']['Goals'] + "/" + statsJSON['Left Side Match Stats']['Shots'] + " (" + leftTeamGoalToShotRatio + "%)")
         $('#leftSideItemAmount').text(`${statsJSON['Left Team Item Count']}`);
         $('#leftSideHits').text(statsJSON['Left Side Match Stats']['Hits']);
         $('#leftSideSteals').text(statsJSON['Left Side Match Stats']['Steals']);
         $('#leftSideSuperStrikes').text(statsJSON['Left Side Match Stats']['Super Strikes']);
         $('#leftSidePerfectPasses').text(statsJSON['Left Side Match Stats']['Perfect Passes']);
+        if (statsJSON.hasOwnProperty('Left Team Frames Possessed Ball') && statsJSON.hasOwnProperty('Right Team Frames Possessed Ball')) {
+            let possessionIntObj = {leftTeam: parseInt(statsJSON['Left Team Frames Possessed Ball']), rightTeam: parseInt(statsJSON['Right Team Frames Possessed Ball']), total: parseInt(statsJSON['Left Team Frames Possessed Ball']) + parseInt(statsJSON['Right Team Frames Possessed Ball'])}
+            
+            let leftTeamOwnershipPercent = (possessionIntObj.leftTeam / possessionIntObj.total);
+            let leftTeamOwnershipSeconds = leftTeamOwnershipPercent * timeElapsed;
+            let leftTeamTimePossessedString = timeToString(leftTeamOwnershipSeconds)
+
+            let rightTeamOwnershipPercent = (possessionIntObj.rightTeam / possessionIntObj.total);
+            let rightTeamOwnershipSeconds = rightTeamOwnershipPercent * timeElapsed;
+            let rightTeamTimePossessedString = timeToString(rightTeamOwnershipSeconds)
+
+            $('#leftSideOwnershipTime').text(leftTeamTimePossessedString + " " + "(" + Math.round(((leftTeamOwnershipPercent)*100)) + "%)")
+            $('#rightSideOwnershipTime').text(rightTeamTimePossessedString + " " + "(" + Math.round(((rightTeamOwnershipPercent)*100)) + "%)")
+        } else {
+            $('#ownershipRow').hide()
+        }
 
         $('#rightSideGoals').text(statsJSON['Right Side Match Stats']['Goals']);
         $('#rightSideShots').text(statsJSON['Right Side Match Stats']['Shots']);
+        $('#rightSideShotPercentage').text(statsJSON['Right Side Match Stats']['Goals'] + "/" + statsJSON['Right Side Match Stats']['Shots'] + " (" + rightTeamGoalToShotRatio + "%)")
         $('#rightSideItemAmount').text(`${statsJSON['Right Team Item Count']}`);
         $('#rightSideHits').text(statsJSON['Right Side Match Stats']['Hits']);
         $('#rightSideSteals').text(statsJSON['Right Side Match Stats']['Steals']);
         $('#rightSideSuperStrikes').text(statsJSON['Right Side Match Stats']['Super Strikes']);
         $('#rightSidePerfectPasses').text(statsJSON['Right Side Match Stats']['Perfect Passes']);
+
+
 
         var compareResult = compareStatEquality(statsJSON['Left Side Match Stats']['Goals'], statsJSON['Right Side Match Stats']['Goals'])
         if (compareResult == 1) {
@@ -119,6 +148,22 @@ $(document).ready(function(){
         } else if (compareResult == -1) {
             $('#rightSideShots').addClass('surplusStat')
         }
+
+        compareResult = compareStatEquality(leftTeamGoalToShotRatio, rightTeamGoalToShotRatio);
+        if (compareResult == 1) {
+            $('#leftSideShotPercentage').addClass('surplusStat')
+        } else if (compareResult == -1) {
+            $('#rightSideShotPercentage').addClass('surplusStat')
+        }
+
+        if (statsJSON.hasOwnProperty('Left Team Frames Possessed Ball') && statsJSON.hasOwnProperty('Right Team Frames Possessed Ball')) {
+            compareResult = compareStatEquality(statsJSON['Left Team Frames Possessed Ball'], statsJSON['Right Team Frames Possessed Ball']);
+            if (compareResult == 1) {
+                $('#leftSideOwnershipTime').addClass('surplusStat')
+            } else if (compareResult == -1) {
+                $('#rightSideOwnershipTime').addClass('surplusStat')
+            }
+        }        
 
         compareResult = compareStatEquality(statsJSON['Left Team Item Count'], statsJSON['Right Team Item Count'])
         if (compareResult == 1) {

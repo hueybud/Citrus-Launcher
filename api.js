@@ -108,6 +108,7 @@ function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection) 
 function startPlayback(fileName){
   return new Promise(async function(resolve, reject){
     var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
+    // check for blank fields
     for (elem in settingsJSON) {
       if (settingsJSON[elem] == "" && elem != "isoHash") {
         // the user is not able to do anything about a missing hash so no point in stopping it
@@ -130,6 +131,16 @@ function startPlayback(fileName){
       of ${isoHash} <b>(${hashToISOName(isoHash)})</b>. <p class="mt-2">Please select the appropriate ISO for this replay 
       via the Settings tab. This page can be accessed by clicking the gear icon in the top right corner.</p>
       `
+      resolve(errorMessage);
+      return;
+    }
+
+    // check to see if the dolphin.exe they provided exists (people delete folders)
+    if (!fs.existsSync(settingsJSON['pathToDolphin'])) {
+      console.log("dolphin path does not exist")
+      var errorMessage = `The Dolphin path in Settings does not exist. Did you delete it?
+      <p class="mt-2"> Please provide an existing path to Citrus Dolphin via the Settings tab. 
+      This page can be accessed by clicking the gear icon in the top right corner.</p>`
       resolve(errorMessage);
       return;
     }
