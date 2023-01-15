@@ -2,9 +2,62 @@ import {captainIDToName, sidekickIDToName, stadiumIDToName, compareStatEquality,
 
 $(document).ready(function(){
 
+    $('#madeOrMissedDropdown').multiselect({
+        nonSelectedText: 'None Selected',
+        allSelectedText: 'Made & Missed',
+        templates: {
+          button: '<button type="button" class="multiselect dropdown-toggle btn btn-primary" data-bs-toggle="dropdown" aria-expanded="false"><span class="multiselect-selected-text"></span></button>',
+        },
+        onChange: function(option, checked, select) {
+            /*
+            let selectedValues = $('#madeOrMissedDropdown').val()
+            if (selectedValues.length == 0) {
+                $('#madeOrMissedDropdown').multiselect('select', option[0]['value'])
+                alert("Cannot have no shots selected")
+            }
+            */
+            updateGoalGraph()
+        }           
+    });
+    $("#madeOrMissedDropdown").multiselect('selectAll', false);
+    $("#madeOrMissedDropdown").multiselect('updateButtonText');
+    
+    $('#shotTypeDropdown').multiselect({
+        nonSelectedText: 'None Selected',
+        allSelectedText: 'All Shot Types',
+        templates: {
+          button: '<button type="button" class="multiselect dropdown-toggle btn btn-primary" data-bs-toggle="dropdown" aria-expanded="false"><span class="multiselect-selected-text"></span></button>',
+        },    
+        onChange: function() {
+            updateGoalGraph();
+        }         
+    });
+    $("#shotTypeDropdown").multiselect('selectAll', false);
+    $("#shotTypeDropdown").multiselect('updateButtonText');
+
+    var dots = []
+    var filteredArr = [];
+
     var jsonStats;
     var leftTeamItemToggle = "basic";
     var rightTeamItemToggle = "basic";
+    class ShotObject {
+        constructor(side, madeOrMissed, specificShotType, genericShotType, timestamp, xyVel, xPos, yPos, zPos, xVel, yVel, zVel, chargeAmount) {
+            this.side = side;
+            this.madeOrMissed = madeOrMissed;
+            this.specificShotType = specificShotType;
+            this.genericShotType = genericShotType;
+            this.timestamp = timestamp;
+            this.xyVel = xyVel;
+            this.xPos = xPos;
+            this.yPos = yPos;
+            this.zPos = zPos;
+            this.xVel = xVel;
+            this.yVel = yVel;
+            this.zVel = zVel;
+            this.chargeAmount = chargeAmount;
+        }
+    }
     getSummary()
 
     function getSummary() {
@@ -200,12 +253,80 @@ $(document).ready(function(){
             $('#rightSidePerfectPasses').addClass('surplusStat')
         }
 
+        let ourVersion;
+        if (statsJSON.hasOwnProperty('Version')) {
+            ourVersion = parseInt(statsJSON['Version'].split(".").join(""))
+        } else {
+            ourVersion = 0;
+        }
+        if (ourVersion >= 14) {
+            // replace that for when version 0.1.4 is released
+            statsJSON['enhancedGraph'] = true
+
+            for (var elem in statsJSON["Left Team Missed Shots Info"]) {
+                statsJSON["Left Team Missed Shots Info"][elem].push("missed")
+            }
+
+            for (var elem in statsJSON["Left Team Goal Info"]) {
+                statsJSON["Left Team Goal Info"][elem].push("made")
+            }
+
+            for (var elem in statsJSON["Right Team Missed Shots Info"]) {
+                statsJSON["Right Team Missed Shots Info"][elem].push("missed")
+            }
+
+            for (var elem in statsJSON["Right Team Goal Info"]) {
+                statsJSON["Right Team Goal Info"][elem].push("made")
+            }
+
+            let allLeftTeamShotsSorted = statsJSON["Left Team Missed Shots Info"].concat(statsJSON["Left Team Goal Info"])
+            allLeftTeamShotsSorted.sort(function(a,b){
+                return a[0] - b[0];
+            })
+            statsJSON['All Left Team Shots'] = allLeftTeamShotsSorted;
+
+            let allRightTeamShotsSorted = statsJSON["Right Team Missed Shots Info"].concat(statsJSON["Right Team Goal Info"])
+            allRightTeamShotsSorted.sort(function(a,b){
+                return a[0] - b[0];
+            })
+            statsJSON['All Right Team Shots'] = allRightTeamShotsSorted;
+
+            // do some conditional to check how we decide to do new stuff. time based maybe idk
+            // do stuff with new shot type info
+            let prevShot = null;
+            for (var i =0; i < allLeftTeamShotsSorted.length; i++) {
+                let thisObj = allLeftTeamShotsSorted[i];
+                let shotObj = transformShotObject("left", thisObj[thisObj.length - 1], prevShot, ...thisObj)
+                statsJSON['All Left Team Shots'][i] = shotObj;
+                prevShot = shotObj;
+            }
+
+            prevShot = null;
+            for (var i =0; i < allRightTeamShotsSorted.length; i++) {
+                let thisObj = allRightTeamShotsSorted[i];
+                let shotObj = transformShotObject("right", thisObj[thisObj.length - 1], prevShot, ...thisObj)
+                statsJSON['All Right Team Shots'][i] = shotObj;
+                prevShot = shotObj;
+            }
+            statsJSON['All Shots'] = statsJSON['All Left Team Shots'].concat(statsJSON['All Right Team Shots'])
+            setBasicLeftGoalTable(true)
+            setBasicRightGoalTable(true)
+            setLeftShotTypeTable()
+            setRightShotTypeTable()
+            setEnhancedGoalGraph()
+            enableShotDescriptions()
+        } else {
+            statsJSON['enhancedGraph'] = false
+            $('.shotTypeColumn').hide()
+            $('#shotTypeRow').hide()
+            setBasicLeftGoalTable(false)
+            setBasicRightGoalTable(false)
+            $('#goalCanvasButtonsRow').hide()
+            setGoalGraph()
+        }
         setBasicLeftItemTable()
         setBasicRightItemTable()
-        setBasicLeftGoalTable()
-        setBasicRightGoalTable()
         setRuleset()
-        setGoalGraph()
     }
 
     function setBasicLeftItemTable() {
@@ -371,40 +492,70 @@ $(document).ready(function(){
         }
     })
 
-    function setBasicLeftGoalTable() {
+    function setBasicLeftGoalTable(shotTypeBool) {
         if (!jsonStats['Left Team Goal Info'].length) {
             $('#leftTeamGoalMessage').text(`No Goals Were Scored By ${captainIDToName(jsonStats['Left Side Captain ID'])}`)
             $('#leftTeamGoalMessage').show()
             return;
+        }
+        let enhancedLeftShotGoals;
+        if (shotTypeBool) {
+            enhancedLeftShotGoals = jsonStats['All Left Team Shots'].filter(item => item['madeOrMissed'] =='made')
         }
         for (var i = 0; i < jsonStats['Left Team Goal Info'].length; i++) {
             var localTR = document.createElement("tr");
             var goalNumberTD = document.createElement("td");
             goalNumberTD.innerHTML = i + 1;
             var goalTimeTD = document.createElement("td");
+            var goalShotTypeTD = document.createElement("td");
             var timeString = timeToString(jsonStats['Left Team Goal Info'][i][0])
             goalTimeTD.innerHTML = timeString;
             localTR.append(goalNumberTD);
             localTR.append(goalTimeTD);
+            var shotType;
+            if (shotTypeBool) {
+                shotType = enhancedLeftShotGoals[i]['specificShotType'];
+                // if shot type isnt' a community specific move, let's be a little more specific and tell them the kind of shot
+                if (shotType == 'Other') {
+                    shotType = enhancedLeftShotGoals[i]['genericShotType'];
+                }
+                goalShotTypeTD.innerHTML = shotType;
+                localTR.append(goalShotTypeTD);
+            }
             document.getElementById("leftTeamGoalTableBody").append(localTR)
         }
     }
 
-    function setBasicRightGoalTable() {
+    function setBasicRightGoalTable(shotTypeBool) {
         if (!jsonStats['Right Team Goal Info'].length) {
             $('#rightTeamGoalMessage').text(`No Goals Were Scored By ${captainIDToName(jsonStats['Right Side Captain ID'])}`)
             $('#rightTeamGoalMessage').show()
             return;
+        }
+        let enhancedRightShotGoals;
+        if (shotTypeBool) {
+            enhancedRightShotGoals = jsonStats['All Right Team Shots'].filter(item => item['madeOrMissed'] =='made')
         }
         for (var i = 0; i < jsonStats['Right Team Goal Info'].length; i++) {
             var localTR = document.createElement("tr");
             var goalNumberTD = document.createElement("td");
             goalNumberTD.innerHTML = i + 1;
             var goalTimeTD = document.createElement("td");
+            var goalShotTypeTD = document.createElement("td");
             var timeString = timeToString(jsonStats['Right Team Goal Info'][i][0])
             goalTimeTD.innerHTML = timeString;
             localTR.append(goalNumberTD);
             localTR.append(goalTimeTD);
+            var shotType;
+            if (shotTypeBool) {
+                shotType = enhancedRightShotGoals[i]['specificShotType'];
+                // if shot type isnt' a community specific move, let's be a little more specific and tell them the kind of shot
+                if (shotType == 'Other') {
+                    shotType = enhancedRightShotGoals[i]['genericShotType'];
+                }
+                goalShotTypeTD.innerHTML = shotType;
+                localTR.append(goalShotTypeTD);
+            }
             document.getElementById("rightTeamGoalTableBody").append(localTR)
         }
     }
@@ -423,83 +574,134 @@ $(document).ready(function(){
         }
     }
 
-    function setGoalGraph() {
+    function setEnhancedGoalGraph() {
         if (jsonStats['Left Team Missed Shots Info'] && jsonStats['Right Team Missed Shots Info']) {
-            var goalCoordinates = jsonStats["Left Team Goal Info"].concat(jsonStats['Right Team Goal Info'])
-            console.log(goalCoordinates);
-            var missedShotCoordinates = jsonStats['Left Team Missed Shots Info'].concat(jsonStats['Right Team Missed Shots Info'])
-            console.log(missedShotCoordinates)
+            filteredArr = []
+            var selectedMadeOrMissedOptions = $('#madeOrMissedDropdown').val();
+            var selectedShotTypeOptions = $('#shotTypeDropdown').val();
+            for (var i =0; i < jsonStats['All Shots'].length; i++) {
+                if (!selectedMadeOrMissedOptions.includes(jsonStats['All Shots'][i]['madeOrMissed'])) {
+                    continue;
+                }
+                if (!selectedShotTypeOptions.includes(jsonStats['All Shots'][i]['specificShotType'])) {
+                    continue;
+                }
+                filteredArr.push(jsonStats['All Shots'][i])
+            }
+            console.log('filtered array')
+            console.log(filteredArr)
             var canvas = document.getElementById("myCanvas");
             var ctx = canvas.getContext("2d");
-            for (var i = 0; i < missedShotCoordinates.length; i++) {
+            for (var i = 0; i < filteredArr.length; i++) {
                 ctx.beginPath();
-                ctx.fillStyle = "#FF0000";
-                ctx.arc(transformX(missedShotCoordinates[i][1]),transformY(missedShotCoordinates[i][2]),5,0,2*Math.PI);
-                ctx.stroke();
+                if (filteredArr[i]['madeOrMissed'] == "made") {
+                    ctx.fillStyle = "#00FF00";
+                } else {
+                    ctx.fillStyle = "#FF0000";
+                }
+                ctx.arc(transformX(filteredArr[i]['xPos']),transformY(filteredArr[i]['yPos']),5,0,2*Math.PI);
                 ctx.fill();
             }
-            for (var i = 0; i < goalCoordinates.length; i++) {
-                ctx.beginPath();
-                ctx.fillStyle = "#00FF00";
-                ctx.arc(transformX(goalCoordinates[i][1]),transformY(goalCoordinates[i][2]),5,0,2*Math.PI);
-                ctx.stroke();
-                ctx.fill();
-            }
-            ctx.strokeStyle = "#BBBBBB";
-            ctx.moveTo(300, 0);
-            ctx.lineTo(300, 348);
-            ctx.stroke();
-            ctx.beginPath();
-            // if we change dimensions this has to be updated by ratioing area
-            ctx.arc(300,174,51.7,0,2*Math.PI);
-            ctx.stroke();
-            // outer left box
-            ctx.moveTo(transformX(-20.2), transformY(5.2));
-            ctx.lineTo(transformX(-13.5), transformY(5.2));
-            ctx.stroke();
-            ctx.moveTo(transformX(-20.2), transformY(-5.2));
-            ctx.lineTo(transformX(-13.5), transformY(-5.2));
-            ctx.stroke();
-            ctx.moveTo(transformX(-13.5), transformY(-5.2));
-            ctx.lineTo(transformX(-13.5), transformY(5.2));
-            ctx.stroke();
-            // inner left box
-            ctx.moveTo(transformX(-20.2), transformY(2.6));
-            ctx.lineTo(transformX(-17.5), transformY(2.6));
-            ctx.stroke();
-            ctx.moveTo(transformX(-20.2), transformY(-2.6));
-            ctx.lineTo(transformX(-17.5), transformY(-2.6));
-            ctx.stroke();
-            ctx.moveTo(transformX(-17.5), transformY(2.6));
-            ctx.lineTo(transformX(-17.5), transformY(-2.6));
-            ctx.stroke();
-            // needs to be adjusted
-            // outer right box
-            // outer left box
-            ctx.moveTo(transformX(20.2), transformY(5.2));
-            ctx.lineTo(transformX(13.5), transformY(5.2));
-            ctx.stroke();
-            ctx.moveTo(transformX(20.2), transformY(-5.2));
-            ctx.lineTo(transformX(13.5), transformY(-5.2));
-            ctx.stroke();
-            ctx.moveTo(transformX(13.5), transformY(-5.2));
-            ctx.lineTo(transformX(13.5), transformY(5.2));
-            ctx.stroke();
-            // inner left box
-            ctx.moveTo(transformX(20.2), transformY(2.6));
-            ctx.lineTo(transformX(17.5), transformY(2.6));
-            ctx.stroke();
-            ctx.moveTo(transformX(20.2), transformY(-2.6));
-            ctx.lineTo(transformX(17.5), transformY(-2.6));
-            ctx.stroke();
-            ctx.moveTo(transformX(17.5), transformY(2.6));
-            ctx.lineTo(transformX(17.5), transformY(-2.6));
-            ctx.stroke();
+            drawGraphBasis();
         } else {
             $('#goalCanvasRow').hide()
         }
-        //ctx.font = "20px Helvetica Neue";
-        //ctx.strokeText("1", 295, 105);
+    }
+
+    function setGoalGraph() {
+        if (jsonStats['Left Team Missed Shots Info'] && jsonStats['Right Team Missed Shots Info']) {
+            // i failed to reset the missed shot offsets after each game in the gecko code up to citrus dolphin 0.1.4
+            // so in order to properly display shots taken in versions before then, we should be looping by the amount of missed shots we took
+            // versus trusting the array's size
+            let leftTeamMissedShotsAmount = jsonStats['Left Side Match Stats']['Shots'] - jsonStats['Left Side Match Stats']['Goals']
+            let rightTeamMissedShotsAmount = jsonStats['Right Side Match Stats']['Shots'] - jsonStats['Right Side Match Stats']['Goals']
+            let leftTeamMadeShotsAmount = jsonStats['Left Side Match Stats']['Goals']
+            let rightTeamMadeShotsAmount = jsonStats['Right Side Match Stats']['Goals']
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+            for (var i =0; i < leftTeamMissedShotsAmount; i++) {
+                ctx.beginPath();
+                ctx.fillStyle = "#FF0000";
+                ctx.arc(transformX(jsonStats['Left Team Missed Shots Info'][i][1]),transformY(jsonStats['Left Team Missed Shots Info'][i][2]),5,0,2*Math.PI);
+                ctx.fill();
+            }
+            for (var i =0; i < rightTeamMissedShotsAmount; i++) {
+                ctx.beginPath();
+                ctx.fillStyle = "#FF0000";
+                ctx.arc(transformX(jsonStats['Right Team Missed Shots Info'][i][1]),transformY(jsonStats['Right Team Missed Shots Info'][i][2]),5,0,2*Math.PI);
+                ctx.fill();
+            }
+            for (var i = 0; i < leftTeamMadeShotsAmount; i++) {
+                ctx.beginPath();
+                ctx.fillStyle = "#00FF00";
+                ctx.arc(transformX(jsonStats["Left Team Goal Info"][i][1]),transformY(jsonStats["Left Team Goal Info"][i][2]),5,0,2*Math.PI);
+                ctx.fill();
+            }
+            for (var i = 0; i < rightTeamMadeShotsAmount; i++) {
+                ctx.beginPath();
+                ctx.fillStyle = "#00FF00";
+                ctx.arc(transformX(jsonStats['Right Team Goal Info'][i][1]),transformY(jsonStats['Right Team Goal Info'][i][2]),5,0,2*Math.PI);
+                ctx.fill();
+            }
+            ctx.strokeStyle = "#BBBBBB";
+            drawGraphBasis();
+        } else {
+            $('#goalCanvasRow').hide()
+        }
+    }
+
+    function drawGraphBasis() {
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        ctx.beginPath();
+        ctx.strokeStyle = "#BBBBBB";
+        ctx.moveTo(430, 0);
+        ctx.lineTo(430, 500);
+        ctx.stroke();
+        ctx.beginPath();
+        // if we change dimensions this has to be updated by ratioing area
+        ctx.arc(430,250,51.7,0,2*Math.PI);
+        ctx.stroke();
+        // outer left box
+        ctx.moveTo(transformX(-20.2), transformY(5.2));
+        ctx.lineTo(transformX(-13.5), transformY(5.2));
+        ctx.stroke();
+        ctx.moveTo(transformX(-20.2), transformY(-5.2));
+        ctx.lineTo(transformX(-13.5), transformY(-5.2));
+        ctx.stroke();
+        ctx.moveTo(transformX(-13.5), transformY(-5.2));
+        ctx.lineTo(transformX(-13.5), transformY(5.2));
+        ctx.stroke();
+        // inner left box
+        ctx.moveTo(transformX(-20.2), transformY(2.6));
+        ctx.lineTo(transformX(-17.5), transformY(2.6));
+        ctx.stroke();
+        ctx.moveTo(transformX(-20.2), transformY(-2.6));
+        ctx.lineTo(transformX(-17.5), transformY(-2.6));
+        ctx.stroke();
+        ctx.moveTo(transformX(-17.5), transformY(2.6));
+        ctx.lineTo(transformX(-17.5), transformY(-2.6));
+        ctx.stroke();
+        // outer right box
+        ctx.moveTo(transformX(20.2), transformY(5.2));
+        ctx.lineTo(transformX(13.5), transformY(5.2));
+        ctx.stroke();
+        ctx.moveTo(transformX(20.2), transformY(-5.2));
+        ctx.lineTo(transformX(13.5), transformY(-5.2));
+        ctx.stroke();
+        ctx.moveTo(transformX(13.5), transformY(-5.2));
+        ctx.lineTo(transformX(13.5), transformY(5.2));
+        ctx.stroke();
+        // outer right box
+        ctx.moveTo(transformX(20.2), transformY(2.6));
+        ctx.lineTo(transformX(17.5), transformY(2.6));
+        ctx.stroke();
+        ctx.moveTo(transformX(20.2), transformY(-2.6));
+        ctx.lineTo(transformX(17.5), transformY(-2.6));
+        ctx.stroke();
+        ctx.moveTo(transformX(17.5), transformY(2.6));
+        ctx.lineTo(transformX(17.5), transformY(-2.6));
+        ctx.stroke();
     }
 
     // match stage is 40.62x23.56 (so -20.31 to +20.31 x -11.78 to +11.78)
@@ -507,7 +709,7 @@ $(document).ready(function(){
         // x dimension is 20.31
         // x factor is (width of canvas / 2) / 20.31
         // additive is width / 2
-        var additive = (document.getElementById('myCanvas').offsetWidth / 2);
+        var additive = (document.getElementById("myCanvas").offsetWidth / 2);
         var weight = additive / 20.31
         return (input * weight) + additive
     }
@@ -515,9 +717,162 @@ $(document).ready(function(){
         // y dimension is 11.78
         // x factor is (height of canvas / 2) / 11.78
         // additive is height / 2
-        var additive = (document.getElementById('myCanvas').offsetHeight / 2);
+        var additive = (document.getElementById("myCanvas").offsetHeight / 2);
         var weight = additive / 11.78
         return (input * -weight) + additive
+    }
+
+    function transformShotObject(side, madeOrMissed, prevShot, timestamp, xPos, yPos, zPos, xVel, yVel, zVel, chargeAmount) {
+        let xyVelocity = calculateXYVelocity(xVel, yVel);
+        let genericShotType = convertMetricsToGenericShotType(zPos, xyVelocity);
+        let specificShotType = convertGenericShotToSpecificShot(genericShotType, xPos, yPos, chargeAmount, timestamp, madeOrMissed, prevShot)
+        let shotObj = new ShotObject(side, madeOrMissed, specificShotType, genericShotType, timestamp, xyVelocity, xPos, yPos, zPos, xVel, yVel, zVel, chargeAmount);
+        return shotObj;
+    }
+
+    function calculateXYVelocity(xVel, yVel) {
+        return Math.sqrt(Math.pow(xVel, 2) + Math.pow(yVel, 2))
+    }
+
+    function convertMetricsToGenericShotType(zPos, xyVel) {
+        if (zPos > 1.25) {
+            return "Air"
+        }
+        if (xyVel > 22.5) {
+            return "Ground"
+        } else {
+            return "Chip"
+        }
+    }
+
+    function convertGenericShotToSpecificShot(genericShotType, xPos, yPos, chargeAmount, timestamp, madeOrMissed, prevShot) {
+        if (prevShot) {
+            // we tried taking a european on the previous shot but missed
+            // so let's see if on this shot we knocked the rebound attempt in to make this a successful european
+            if (prevShot['specificShotType'] == 'Dirty European' && prevShot['madeOrMissed'] == "missed") {
+                if (genericShotType == "Chip" || genericShotType == "Ground") {
+                    if (timestamp - prevShot['timestamp'] <= 5 && (Math.abs(xPos) >= 12) && (yPos >= -7 && yPos <=7)) {
+                        return "European"
+                    }
+                }
+            }
+        }
+
+        // stereotypical corner shot is x:1, y:11.5
+        if (genericShotType == "Chip") {
+            if ((xPos >= -3.5 && xPos <= 3.5) && (yPos >= 8 || yPos <= -8)) {
+                return "Dirty European"
+            }
+
+            if ((Math.abs(xPos) >= 11.5 && Math.abs(xPos) <= 14) && (yPos >= -6.5 && yPos <= 6.5)) {
+                return "Box Chip"
+            }
+
+            return "Other"
+        }
+
+        if (genericShotType == "Ground") {
+            if ((xPos >= -3 && xPos <= 3) && (yPos >= 8 || yPos <= -8) && chargeAmount >=28) {
+                return "Corner"
+            }
+
+            if ((Math.abs(xPos) >= 13.75 && Math.abs(xPos) <= 16.5) && (yPos >= -6.5 && yPos <= 6.5) && chargeAmount >=12) {
+                return "Slide"
+            }
+
+            return "Other"
+        }
+
+        if (genericShotType == "Air") {
+            return "LAB"
+        }
+
+        return "Other"
+    }
+
+    function setLeftShotTypeTable() {
+        let allLeftShotsArr = jsonStats['All Left Team Shots'];
+        let allLeftShotsMap = new Map();
+        for (var i =0; i < allLeftShotsArr.length; i++) {
+            let specificShotType = allLeftShotsArr[i]['specificShotType'];
+            let madeOrMissed = allLeftShotsArr[i]['madeOrMissed'];
+            let attemptInfo = [];
+            if (!allLeftShotsMap.has(specificShotType)) {
+                if (madeOrMissed == "made") {
+                    attemptInfo = [1,1];
+                } else {
+                    attemptInfo = [0,1];
+                }
+                allLeftShotsMap.set(specificShotType, attemptInfo)
+            } else {
+                attemptInfo = allLeftShotsMap.get(specificShotType);
+                if (madeOrMissed == "made") {
+                    attemptInfo[0]++
+                    attemptInfo[1]++
+                } else {
+                    attemptInfo[1]++
+                }
+            }
+        }
+        let allLeftShotsMapSorted = new Map([...allLeftShotsMap.entries()].sort(function(a,b) {
+            return b[1][1] - a[1][1]
+        }))
+        for (const [key, value] of allLeftShotsMapSorted) {
+            let localTR = document.createElement("tr");
+            let shotTypeTD = document.createElement("td");
+            shotTypeTD.innerHTML = key;
+            //shotTypeTD.className = "surplusStat";
+            let attemptInfoTD = document.createElement("td");
+            // i'm so sorry lol
+            let attemptInfo = `${value[0]}/${value[1]} (${Math.round(((value[0]/value[1])*100))}%)`;
+            attemptInfoTD.innerHTML = attemptInfo;
+            localTR.append(shotTypeTD);
+            localTR.append(attemptInfoTD);
+            document.getElementById('leftTeamShotTypeTableBody').append(localTR)
+        }
+        console.log(allLeftShotsMapSorted)
+    }
+
+    function setRightShotTypeTable() {
+        let allRightShotsArr = jsonStats['All Right Team Shots']
+        let allRightShotsMap = new Map();
+        for (var i =0; i < allRightShotsArr.length; i++) {
+            let specificShotType = allRightShotsArr[i]['specificShotType'];
+            let madeOrMissed = allRightShotsArr[i]['madeOrMissed'];
+            let attemptInfo = [];
+            if (!allRightShotsMap.has(specificShotType)) {
+                if (madeOrMissed == "made") {
+                    attemptInfo = [1,1];
+                } else {
+                    attemptInfo = [0,1];
+                }
+                allRightShotsMap.set(specificShotType, attemptInfo)
+            } else {
+                attemptInfo = allRightShotsMap.get(specificShotType);
+                if (madeOrMissed == "made") {
+                    attemptInfo[0]++
+                    attemptInfo[1]++
+                } else {
+                    attemptInfo[1]++
+                }
+            }
+        }
+        let allRightShotsMapSorted = new Map([...allRightShotsMap.entries()].sort(function(a,b) {
+            return b[1][1] - a[1][1]
+        }))
+        for (const [key, value] of allRightShotsMapSorted) {
+            let localTR = document.createElement("tr");
+            let shotTypeTD = document.createElement("td");
+            shotTypeTD.innerHTML = key;
+            let attemptInfoTD = document.createElement("td");
+            // i'm so sorry lol
+            let attemptInfo = `${value[0]}/${value[1]} (${Math.round(((value[0]/value[1])*100))}%)`;
+            attemptInfoTD.innerHTML = attemptInfo;
+            localTR.append(shotTypeTD);
+            localTR.append(attemptInfoTD);
+            document.getElementById('rightTeamShotTypeTableBody').append(localTR)
+        }
+        console.log(allRightShotsMapSorted)
     }
 
     $('#rulesetElement').on('click', function(){
@@ -546,4 +901,123 @@ $(document).ready(function(){
             console.log(error);
         });
     })
+
+    function selectAllGoalGraph() {
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        $("#madeOrMissedDropdown").multiselect('selectAll', false);
+        $('#madeOrMissedDropdown').multiselect('refresh')
+        $("#shotTypeDropdown").multiselect('selectAll', false);
+        $('#shotTypeDropdown').multiselect('refresh')
+        setEnhancedGoalGraph();
+    }
+
+    function deselectAllGoalGraph() {
+        $('#madeOrMissedDropdown').multiselect("deselectAll", false)
+        $('#madeOrMissedDropdown').multiselect('refresh')
+        $('#shotTypeDropdown').multiselect("deselectAll", false)
+        $('#shotTypeDropdown').multiselect('refresh')
+        updateGoalGraph();
+    }
+
+    function updateGoalGraph() {
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        setEnhancedGoalGraph();
+    }
+
+    $('#deselectAllGraphButton').on('click', deselectAllGoalGraph)
+    $('#selectAllGraphButton').on('click', selectAllGoalGraph)
+
+    function enableShotDescriptions() {
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        var hit = false;
+        var markedObj = {x: 0, y: 0, madeOrMissed: "blank"}
+        // https://stackoverflow.com/questions/17064913/display-tooltip-in-canvas-graph
+        $("#myCanvas").mousemove(function(e){
+            $('#shotInfoCard').hide()
+            var canvasOffset = $('#myCanvas').offset()
+            let mouseX = parseInt(e.pageX - canvasOffset.left);
+            let mouseY = parseInt(e.pageY - canvasOffset.top);
+
+            if (hit) {
+                // let's see if we are still in the hit area of our marked dot to know if we should unhighlight it
+                var dot = markedObj;
+                var dx = mouseX - dot.x;
+                var dy = mouseY - dot.y;
+                if (!(dx * dx + dy * dy < dot.tooltipRadius)) {
+                    // we are no longer in the marked object's range and should unhighlight it
+                    // undraw current highlighted circle to prevent stacking
+                    ctx.beginPath();
+                    ctx.globalCompositeOperation = 'destination-out'
+                    ctx.arc(dot.x,dot.y, 5, 0, Math.PI*2, true);
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.globalCompositeOperation = 'source-over'
+                    if (dot.madeOrMissed == "missed") {
+                        ctx.fillStyle = "#FF0000";
+                    } else {
+                        ctx.fillStyle = "#00FF00";
+                    }
+                    ctx.arc(dot.x,dot.y,5,0,2*Math.PI);
+                    ctx.fill();
+                    hit = false;
+                }
+            }
+
+            
+            for (var i = 0; i < filteredArr.length; i++) {
+                //var dot = dots[i];
+                let ourShot = filteredArr[i]
+                var dot = {
+                    x: transformX(ourShot['xPos']),
+                    y: transformY(ourShot['yPos']),
+                    madeOrMissed: ourShot['madeOrMissed'],
+                    timestamp: ourShot['timestamp'],
+                    specificShotType: ourShot['specificShotType'],
+                    genericShotType: ourShot['genericShotType'],
+                    tooltipRadius: 7*7
+                }
+                var dx = mouseX - dot.x;
+                var dy = mouseY - dot.y;
+                if (dx * dx + dy * dy < dot.tooltipRadius) {
+                    hit = true;
+                    // show tooltip to the right and below the cursor
+                    // mark this dot in markedObj for un-highlighting purposes
+                    $('#shotCardInfo1').text(`${dot['madeOrMissed'].charAt(0).toUpperCase() + dot['madeOrMissed'].slice(1)}`)
+                    $('#shotCardInfo1').css('color', dot['madeOrMissed'] == "made" ? '#00FF00' : '#FF0000')
+                    $('#shotCardInfo2').text(`${timeToString(dot['timestamp'])}`)
+                    $('#shotCardInfo3').text(`${dot['specificShotType']}`)
+                    $('#shotInfoCard').show();
+                    $('#shotInfoCard').css({
+                        top: e.pageY - 10,
+                        left: e.pageX + 20
+                    });
+                    // undraw current made/missed circle to prevent stacking
+                    ctx.beginPath();
+                    ctx.globalCompositeOperation = 'destination-out'
+                    ctx.arc(dot.x,dot.y, 5, 0, Math.PI*2, true);
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.globalCompositeOperation = 'source-over'
+                    ctx.fillStyle = "#FFE900";
+                    ctx.arc(dot.x,dot.y,5,0,2*Math.PI);
+                    ctx.fill();
+                    markedObj = {
+                        x: dot.x,
+                        y: dot.y,
+                        madeOrMissed: dot.madeOrMissed
+                    }
+                    break;
+                }
+            }
+
+        })
+    }
+
 })

@@ -1,8 +1,8 @@
 {
-  "name": "citrus-launcher",
-  "version": "1.0.0",
+  "name": "citruslauncher",
+  "version": "0.1.4",
   "icon": "citrus-logo.ico",
-  "description": "application to launch Citrus Replay files and show match statistics",
+  "description": "Application to launch Citrus Replay files and show match statistics",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -19,6 +19,7 @@
     "unzipper": "^0.10.11"
   },
   "devDependencies": {
-    "electron": "^18.2.3"
+    "electron": "^18.2.3",
+    "electron-winstaller": "^5.1.0"
   }
 }

@@ -116,6 +116,11 @@ function startPlayback(fileName){
         return;
       }
     }
+    // handle dank case where hash doesn't get set from dolphin and gets set to 00s
+    if (settingsJSON["isoHash"] == "0000000000000000") {
+
+    }
+
     // comapre hashes now
 
     // get hash from DTM file
@@ -123,7 +128,7 @@ function startPlayback(fileName){
 
     // get hash from iso file
     var isoHash = await getMD5ISO(settingsJSON['pathToISO'])
-    if (dtmHash != isoHash) {
+    if ((dtmHash != isoHash) && (dtmHash != "0000000000000000")) {
       // mistmatched hashes which could mess with playback
       var errorMessage = `
       Mismatched hashes between your replay file ISO and your selected playback ISO.
