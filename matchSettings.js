@@ -35,7 +35,41 @@ $(document).ready(function(){
     $("#shotTypeDropdown").multiselect('selectAll', false);
     $("#shotTypeDropdown").multiselect('updateButtonText');
 
-    var dots = []
+    var shotInfoMap = new Map([
+        ["Corner", {
+            "title": "Corner Shot",
+            "videoURL": `<div style='position:relative; padding-bottom:calc(55.43% + 44px)'><iframe src='https://gfycat.com/ifr/GreatPiercingLaughingthrush' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>`,
+            "description": "A fully charged shot taken from the corners near the midfield. Higher percentage success rate than most shots due to the trajectory of the ball getting around Kritter"
+        }],
+        ["Box Chip", {
+            "title": "Box Chip",
+            "videoURL": `<div style='position:relative; padding-bottom:calc(55.89% + 44px)'><iframe src='https://gfycat.com/ifr/GracefulMarriedAffenpinscher' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>`,
+            "description": "A shot taken from the corner of the goalie box. The shooter faces away from the goalie and then does a lob shot, aiming for the opposite post from where they are standing. <br><br> Very high percentage shot on all maps so long as you shoot from the right place. Palace and Konga have the most strict positioning requirements."
+        }],
+        ["Slide", {
+            "title": "Slide Shot",
+            "videoURL": `<div style='position:relative; padding-bottom:calc(55.43% + 44px)'><iframe src='https://gfycat.com/ifr/BothAppropriateArchaeopteryx' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>`,
+            "description": "A charged shot taken in the goalie box by sliding while charging the shot. Kritter does not move while the ball is charging so the objective is to make an opening while charging."
+        }],
+        ["LAB", {
+            "title": "LAB (Dinker)",
+            "videoURL": `<div style='position:relative; padding-bottom:calc(55.89% + 44px)'><iframe src='https://gfycat.com/ifr/DisguisedOddballAzurevase' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>`,
+            "description": "L+A -> B. A lob pass to a teammate which is shot in midair. Low-percentage shot but is relatively safe. The location of the shot is important as LABs done closer to the goal have a better chance of going in."
+        }],
+        ["European", {
+            "title": "European",
+            "videoURL": `<div style='position:relative; padding-bottom:calc(55.43% + 44px)'><iframe src='https://gfycat.com/ifr/BothAppropriateArchaeopteryx' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>`,
+            "description": "A lob shot taken from the corner near the midfield. The goal is to get the ball to bounce off the post or wall near the goalie and have a nearby teammate kick a goal in."
+        }],
+        ["Dirty European", {
+            "title": "Dirty European",
+            "videoURL": `<div style='position:relative; padding-bottom:calc(55.70% + 44px)'><iframe src='https://gfycat.com/ifr/GlitteringGlossyGartersnake' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>`,
+            "description": "A European that goes straight into the goal without needing a rebound."
+        }],
+
+    ]);
+
+
     var filteredArr = [];
 
     var jsonStats;
@@ -751,7 +785,7 @@ $(document).ready(function(){
             // so let's see if on this shot we knocked the rebound attempt in to make this a successful european
             if (prevShot['specificShotType'] == 'Dirty European' && prevShot['madeOrMissed'] == "missed") {
                 if (genericShotType == "Chip" || genericShotType == "Ground") {
-                    if (timestamp - prevShot['timestamp'] <= 5 && (Math.abs(xPos) >= 12) && (yPos >= -7 && yPos <=7)) {
+                    if (timestamp - prevShot['timestamp'] <= 5 && (Math.abs(xPos) >= 12) && (yPos >= -9 && yPos <=9)) {
                         return "European"
                     }
                 }
@@ -772,7 +806,7 @@ $(document).ready(function(){
         }
 
         if (genericShotType == "Ground") {
-            if ((xPos >= -3 && xPos <= 3) && (yPos >= 8 || yPos <= -8) && chargeAmount >=28) {
+            if ((xPos >= -4.5 && xPos <= 4.5) && (yPos >= 8 || yPos <= -8) && chargeAmount >=28) {
                 return "Corner"
             }
 
@@ -820,7 +854,11 @@ $(document).ready(function(){
         for (const [key, value] of allLeftShotsMapSorted) {
             let localTR = document.createElement("tr");
             let shotTypeTD = document.createElement("td");
-            shotTypeTD.innerHTML = key;
+            if (key != "Other") {
+                shotTypeTD.innerHTML = key + ` <i class="fas fa-info-circle fa-xs shotInfoTooltip" id="shotType-${key}"></i>`;
+            } else {
+                shotTypeTD.innerHTML = key;
+            }
             //shotTypeTD.className = "surplusStat";
             let attemptInfoTD = document.createElement("td");
             // i'm so sorry lol
@@ -863,7 +901,11 @@ $(document).ready(function(){
         for (const [key, value] of allRightShotsMapSorted) {
             let localTR = document.createElement("tr");
             let shotTypeTD = document.createElement("td");
-            shotTypeTD.innerHTML = key;
+            if (key != "Other") {
+                shotTypeTD.innerHTML = key + ` <i class="fas fa-info-circle fa-xs shotInfoTooltip" id="shotType-${key}"></i>`;
+            } else {
+                shotTypeTD.innerHTML = key;
+            }
             let attemptInfoTD = document.createElement("td");
             // i'm so sorry lol
             let attemptInfo = `${value[0]}/${value[1]} (${Math.round(((value[0]/value[1])*100))}%)`;
@@ -901,6 +943,34 @@ $(document).ready(function(){
             console.log(error);
         });
     })
+
+    $(document).on('click', '.shotInfoTooltip', function(e){
+        //get all required info and fill shotTypeInfoCard with it
+        let shotType = e.currentTarget.id.split("-")[1]
+        let ourShotInfo = shotInfoMap.get(shotType);
+        if (ourShotInfo == undefined) {
+            return
+        }
+        $('#shotInfoVideoURL').html(ourShotInfo['videoURL'])
+        $('#shotInfoTitle').text(ourShotInfo['title'])
+        $('#shotInfoDesc').html(ourShotInfo['description'])
+        $('#shotTypeInfoCard').css({
+            top: e.pageY - 60,
+            left: e.pageX + 50
+        })
+        $('#shotTypeInfoCard').show()
+    })
+
+    $('#closeShotTypeInfoCard').click(function(){
+        $('#shotTypeInfoCard').hide()
+    })
+
+    $(document).mouseup(function(e) {
+        // check if we have clicked outside the shot type info card and if so hide it (even tho it might not be visible)
+        if (!$(e.target).is("#shotTypeInfoCard,#shotTypeInfoCard *")) {
+            $('#shotTypeInfoCard').hide();
+        }
+    });
 
     function selectAllGoalGraph() {
         var canvas = document.getElementById("myCanvas");

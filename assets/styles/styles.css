@@ -233,3 +233,20 @@ dl, ol, ul {
 #shotCardUL {
     margin-top: 0 !important
 }
+
+.shotInfoTooltip {
+    cursor: pointer;
+}
+
+.shotInfoTooltip:hover {
+    color: grey;
+}
+
+#shotTypeInfoCard {
+    display: none;
+    position: absolute;
+}
+
+.shotTypeCardOverrideColor {
+    color: black !important
+}
