@@ -250,7 +250,20 @@ function displayLoadProgress(currentProgress, denominator) {
 
 function transformReplayIntoElement(metadataJSON, correctFileName) {
     //console.log(metadataJSON)
-    let rawDate = new Date(metadataJSON['Date']);
+    let ourVersion;
+    if (metadataJSON.hasOwnProperty('Version')) {
+        ourVersion = parseInt(metadataJSON['Version'].split(".").join(""))
+    } else {
+        ourVersion = 0;
+    }
+
+    let rawDate;
+    if (ourVersion > 14) {
+        let parsedEpoch = parseFloat((metadataJSON['Epoch']).replaceAll(',','')) * 1000
+        rawDate = new Date(parsedEpoch);
+    } else {
+        rawDate = new Date(metadataJSON['Date']);
+    }
     let ourDate = rawDate.toLocaleString('default', {month: 'short', day: 'numeric', year: 'numeric'});
     let ourTime = rawDate.toLocaleTimeString('default', {timeStyle: 'short'})
     var leftPlayerNamesString = "";

@@ -58,7 +58,7 @@ $(document).ready(function(){
         }],
         ["European", {
             "title": "European",
-            "videoURL": `<div style='position:relative; padding-bottom:calc(55.43% + 44px)'><iframe src='https://gfycat.com/ifr/BothAppropriateArchaeopteryx' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>`,
+            "videoURL": `<div style='position:relative; padding-bottom:calc(55.33% + 44px)'><iframe src='https://gfycat.com/ifr/HastyThoseIvorygull' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>`,
             "description": "A lob shot taken from the corner near the midfield. The goal is to get the ball to bounce off the post or wall near the goalie and have a nearby teammate kick a goal in."
         }],
         ["Dirty European", {
