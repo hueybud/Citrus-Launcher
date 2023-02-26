@@ -161,7 +161,6 @@ app.get('/getMatchSummary', async function(req, res){
     var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
     var singularJSONCollection = [];
     await api.getCitrusFileJSON(settingsJSON['pathToReplays'], req.query.fileName, singularJSONCollection);
-    //console.log(singularJSONCollection[0]);
     res.send(singularJSONCollection[0]);
 })
 module.exports.startServer = startServer;

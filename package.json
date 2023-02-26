@@ -1,6 +1,6 @@
 {
   "name": "citruslauncher",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "icon": "citrus-logo.ico",
   "description": "Application to launch Citrus Replay files and show match statistics",
   "main": "main.js",

@@ -29,44 +29,10 @@ async function getCitrusFilesNames(citrusReplaysPath, extension) {
   return listOfCitrusFiles
 }
 
-// not being used anymore
-async function collectCitrusFiles(citrusReplaysPath, extension) {
-    let listOfCitrusFiles;
-    try {
-      listOfCitrusFiles = fs.readdirSync(citrusReplaysPath);
-      //console.log(listOfCitrusFiles);
-      listOfCitrusFiles = listOfCitrusFiles.map(fileName => ({
-        name: fileName,
-        time: fs.statSync(`${citrusReplaysPath}/${fileName}`).mtime.getTime()
-      }))
-      .sort((a, b) => b.time - a.time)
-      .map(file => file.name);
-      //console.log(listOfCitrusFiles);
-      
-    } catch (error) {
-      return error.code
-    }
-    listOfCitrusFiles = listOfCitrusFiles.filter(file => file.match(new RegExp(`.*\.(${extension})$`, 'ig')));
-    console.log(listOfCitrusFiles)
-    var citrusJSONCollection = [];
-    for (var i = 0; i < listOfCitrusFiles.length; i++) {
-        // pass citrusJSONCollection by reference
-        var result = await getCitrusFileJSON(citrusReplaysPath, listOfCitrusFiles[i], citrusJSONCollection)
-        if (result == "done but no json found") {
-            // create HTMl banner element of blanks
-        } else {
-            // create HTML banner based off of basic JSON info (time, chars, port, score)
-        }
-    }
-    // we need to get the JSON into a readable format. right now it has missing quotes and unnecessary commas!
-    //console.log(citrusJSONCollection);
-    return citrusJSONCollection;
-    //return mockedCollectionJSON;
-}
-
 function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection) {
     const expectedAmountOfFiles = 3;
     var seenFiles = 0;
+    let foundJson = false;
     return new Promise(function(resolve, reject){
         fs.createReadStream(path.join(citrusReplaysPath, citrusFile))
         .pipe(unzipStream.Parse())
@@ -79,6 +45,7 @@ function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection) 
           transform: async function(entry, e, cb) {
             seenFiles++;
             if (entry.path == "output.json") {
+              foundJson = true;
               var content = ""
               entry.on('data', function(chunk){
                 content += chunk;
@@ -86,17 +53,17 @@ function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection) 
               entry.on('end', function(){
                 try {
                   citrusJSONCollection.push(JSON.parse(content.toString('utf-8')));
+                  resolve("done")
                 } catch (err) {
                   resolve("could not parse json")
                 }
-                resolve("done");
               })
             }
             else {
               entry.autodrain();
               cb();
                 // resolve to keep the code going but let us know no json was found
-              if (seenFiles == expectedAmountOfFiles) {
+              if (seenFiles == expectedAmountOfFiles && !foundJson) {
                 resolve("done but no json found")
               }
             }
@@ -165,6 +132,7 @@ function startPlayback(fileName){
 
 function getReplayHash(settingsJSON, fileName) {
   var seenFiles = 0;
+  let jsonFound = false;
   return new Promise(function(resolve, reject){
     var dtmHash;
     fs.createReadStream(path.join(settingsJSON['pathToReplays'], fileName))
@@ -178,9 +146,9 @@ function getReplayHash(settingsJSON, fileName) {
         transform: function(entry, e, cb) {
           seenFiles++;
           if (entry.path == "output.json") {
+            foundJson = true;
             var content = ""
             entry.on('data', function(chunk){
-              console.log("here")
               content += chunk;
             })
             entry.on('end', function(){
@@ -198,7 +166,7 @@ function getReplayHash(settingsJSON, fileName) {
             entry.autodrain();
             cb();
             // resolve to keep the code going but let us know no json was found
-            if (seenFiles == 3) {
+            if (seenFiles == 3 && !foundJson) {
               resolve("done but no json found")
             }
           }
@@ -247,7 +215,6 @@ function hashToISOName(hash) {
   }
 }
 module.exports.collectCitrusNames = getCitrusFilesNames;
-module.exports.collectCitrusFiles = collectCitrusFiles;
 module.exports.getCitrusFileJSON = getCitrusFileJSON;
 module.exports.startPlayback = startPlayback;
 module.exports.getMD5ISO = getMD5ISO;
@@ -351,11 +318,12 @@ var mockedCollectionJSON = [
     }
   ]
 
-getCitrusFilesNames(path.join(os.homedir(), 'Documents', 'Dolphin Emulator', 'CitrusReplays'), '.cit');
-/*
+//getCitrusFilesNames(path.join(os.homedir(), 'Documents', 'Dolphin Emulator', 'CitrusReplays'), '.cit');
+
 async function test() {
-  var result = await getCitrusFileJSON(path.join(os.homedir(), 'Documents', 'Citrus Replays'), 'Game_July_22_2022_17_24_34.cit', [])
-  console.log(result)
+  let someCollection = []
+  await getCitrusFileJSON(path.join(os.homedir(), 'Documents', 'Dolphin Emulator', 'Citrus Replays'), 'Game_February_15_2023_17_32_05.cit', someCollection)
+  console.log("and the result is")
+  console.log(someCollection)
 }
-test()
-*/
+//test()
