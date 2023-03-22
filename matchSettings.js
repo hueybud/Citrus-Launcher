@@ -772,7 +772,7 @@ $(document).ready(function(){
         if (zPos > 1.25) {
             return "Air"
         }
-        if (xyVel > 22.5) {
+        if (xyVel > 20.5) {
             return "Ground"
         } else {
             return "Chip"

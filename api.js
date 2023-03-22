@@ -15,17 +15,17 @@ async function getCitrusFilesNames(citrusReplaysPath, extension) {
     //console.log(listOfCitrusFiles);
     listOfCitrusFiles = listOfCitrusFiles.map(fileName => ({
       name: fileName,
-      time: fs.statSync(`${citrusReplaysPath}/${fileName}`).mtime.getTime()
+      time: fs.statSync(`${citrusReplaysPath}/${fileName}`).mtime.getTime(),
+      size: fs.statSync(`${citrusReplaysPath}/${fileName}`).size
     }))
     .sort((a, b) => b.time - a.time)
-    .map(file => file.name);
-    //console.log(listOfCitrusFiles);
     
   } catch (error) {
     return error.code
   }
-  listOfCitrusFiles = listOfCitrusFiles.filter(file => file.match(new RegExp(`.*\.(${extension})$`, 'ig')));
-  console.log(listOfCitrusFiles)
+  listOfCitrusFiles = listOfCitrusFiles.filter(file => file.name.match(new RegExp(`.*\.(${extension})$`, 'ig')) && file.size > 300000);
+  listOfCitrusFiles = listOfCitrusFiles.map(file => file.name);
+  console.log(listOfCitrusFiles);
   return listOfCitrusFiles
 }
 
@@ -39,6 +39,12 @@ function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection) 
         .on('error', function(unzipError){
           console.log(unzipError)
           resolve("could not unzip cit file")
+        })
+        .on('end', function(){
+          if (seenFiles == 0 || seenFiles != 3) {
+            console.log(`could not verify this CIT has JSON file. seenFiles is ${seenFiles} for ${citrusFile}`)
+            resolve("could not verify this CIT has JSON file")
+          }
         })
         .pipe(Stream.Transform({
           objectMode: true,
@@ -64,6 +70,7 @@ function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection) 
               cb();
                 // resolve to keep the code going but let us know no json was found
               if (seenFiles == expectedAmountOfFiles && !foundJson) {
+                console.log("done but no json found")
                 resolve("done but no json found")
               }
             }
@@ -322,7 +329,7 @@ var mockedCollectionJSON = [
 
 async function test() {
   let someCollection = []
-  await getCitrusFileJSON(path.join(os.homedir(), 'Documents', 'Dolphin Emulator', 'Citrus Replays'), 'Game_February_15_2023_17_32_05.cit', someCollection)
+  console.log(await getCitrusFileJSON(path.join(os.homedir(), 'Documents', 'Dolphin Emulator', 'Citrus Replays'), 'Game_March_13_2023_17_15_59.cit', someCollection))
   console.log("and the result is")
   console.log(someCollection)
 }

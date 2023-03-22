@@ -249,7 +249,10 @@ function displayLoadProgress(currentProgress, denominator) {
 }
 
 function transformReplayIntoElement(metadataJSON, correctFileName) {
-    //console.log(metadataJSON)
+    console.log(metadataJSON)
+    if (typeof metadataJSON != "object") {
+        return
+    }
     let ourVersion;
     if (metadataJSON.hasOwnProperty('Version')) {
         ourVersion = parseInt(metadataJSON['Version'].split(".").join(""))
