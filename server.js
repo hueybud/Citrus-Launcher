@@ -5,6 +5,7 @@ const api = require('./api');
 const path = require('path');
 const fs = require('fs')
 const os = require('os');
+const getSettingsPath = require("./processWrapper").getSettingsPath;
 var serverVar;
 var globalCitrusNames;
 var globalCitrusCollection;
@@ -43,7 +44,7 @@ app.get('/test', function(req, res){
 app.post('/collectCitrusNames', async function(req, res){
     // first value in returned array is telling the client if we can use the same htmlCollectionArr as last time
     if (req.body.refresh == true || (globalRowParam != req.body.rowParam) || (globalPageParam != req.body.pageParam)) {
-        var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
+        var settingsJSON = api.readSettingsFile();
         var citrusNamesList = await api.collectCitrusNames(settingsJSON['pathToReplays'], '.cit')
         globalCitrusNames = citrusNamesList;
         globalRowParam = req.body.rowParam;
@@ -51,7 +52,7 @@ app.post('/collectCitrusNames', async function(req, res){
         res.send([false, globalCitrusNames]);
     } else {
         if (!globalCitrusNames) {
-            var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
+            var settingsJSON = api.readSettingsFile();
             var citrusNamesList = await api.collectCitrusNames(settingsJSON['pathToReplays'], '.cit')
             globalCitrusNames = citrusNamesList;
             globalRowParam = req.body.rowParam;
@@ -81,40 +82,22 @@ app.post('/setPageParam', function(req, res){
 app.get('/getGlobalPageParam', function(req, res){
     res.send({"pageParam": globalPageParam || 1})
 })
-/*
-    This function is not being used after switching to individual name lookup convention
-*/
-app.post('/collectCitrusFiles', async function(req, res){
-    if (req.body.refresh == true) {
-        var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
-        var citrusJSONCollection = await api.collectCitrusFiles(settingsJSON['pathToReplays'], '.cit');
-        globalCitrusCollection = citrusJSONCollection;
-    } else {
-        if (!globalCitrusCollection) {
-            var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
-            var citrusJSONCollection = await api.collectCitrusFiles(settingsJSON['pathToReplays'], '.cit');
-            //console.log(JSON.parse(citrusJSONCollection[0]))
-            //console.log(citrusJSONCollection);
-            globalCitrusCollection = citrusJSONCollection;
-        }
-    }
-    res.send(globalCitrusCollection);
-})
+
 app.post('/startPlayback', async function(req,res){
-    var result = await api.startPlayback(req.body.fileName);
+    var result = await api.startPlayback(req.body.fileName, req.body.onFileClick);
     res.send(result);
 })
 app.get('/getSettingsJSON', function(req, res){
-    var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
+    var settingsJSON = api.readSettingsFile();
     res.send(settingsJSON);
 })
 app.post('/updateReplaysFolder', function(req, res){
-    var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
+    var settingsJSON = api.readSettingsFile();
     console.log(req.body);
     var updatedReplayFolder = req.body.replaysPath;
     console.log(updatedReplayFolder)
     settingsJSON['pathToReplays'] = updatedReplayFolder;
-    fs.writeFile('settings.json', JSON.stringify(settingsJSON), function(err){
+    fs.writeFile(getSettingsPath(), JSON.stringify(settingsJSON), function(err){
         if (err) {
             console.log(err)
         }
@@ -124,11 +107,11 @@ app.post('/updateReplaysFolder', function(req, res){
     res.end();
 })
 app.post('/updateISOFile', function(req, res){
-    var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
+    var settingsJSON = api.readSettingsFile();
     var updatedISOFile = req.body.isoFile;
     console.log(updatedISOFile)
     settingsJSON['pathToISO'] = updatedISOFile;
-    fs.writeFile('settings.json', JSON.stringify(settingsJSON), async function(err){
+    fs.writeFile(getSettingsPath(), JSON.stringify(settingsJSON), async function(err){
         if (err) {
             console.log(err)
         } else {
@@ -145,12 +128,12 @@ app.post('/updateISOFile', function(req, res){
     res.end();
 })
 app.post('/updateDolphinFile', function(req, res){
-    var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
+    var settingsJSON = api.readSettingsFile();
     console.log(req.body);
     var updatedDolphinFile = req.body.dolphinFile;
     console.log(updatedDolphinFile)
     settingsJSON['pathToDolphin'] = updatedDolphinFile;
-    fs.writeFile('settings.json', JSON.stringify(settingsJSON), function(err){
+    fs.writeFile(getSettingsPath(), JSON.stringify(settingsJSON), function(err){
         if (err) {
             console.log(err)
         }
@@ -158,9 +141,10 @@ app.post('/updateDolphinFile', function(req, res){
     res.end();
 })
 app.get('/getMatchSummary', async function(req, res){
-    var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
+    console.log("match summary request: " + JSON.stringify(req.query))
+    var settingsJSON = api.readSettingsFile();
     var singularJSONCollection = [];
-    await api.getCitrusFileJSON(settingsJSON['pathToReplays'], req.query.fileName, singularJSONCollection);
+    await api.getCitrusFileJSON(settingsJSON['pathToReplays'], req.query.fileName, singularJSONCollection, req.query.onFileClick);
     res.send(singularJSONCollection[0]);
 })
 module.exports.startServer = startServer;

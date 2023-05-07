@@ -2,6 +2,9 @@ import {captainIDToName, sidekickIDToName, stadiumIDToName, compareStatEquality,
 
 $(document).ready(function(){
 
+    var globalFileName;
+    var globalOnFileClick;
+
     $('#madeOrMissedDropdown').multiselect({
         nonSelectedText: 'None Selected',
         allSelectedText: 'Made & Missed',
@@ -95,14 +98,23 @@ $(document).ready(function(){
     getSummary()
 
     function getSummary() {
-        var fileName = window.location.search.split('?fileName=')[1];
+        var queryParams = new URLSearchParams(window.location.search)
+        var fileName = queryParams.get("fileName");
+        globalFileName = fileName;
+        var autoStartReplay = queryParams.get("autoStartReplay");
+        console.log("query param: " +  queryParams.get("onFileClick"))
+        var onFileClick = queryParams.get("onFileClick") || false;
+        globalOnFileClick = onFileClick;
         $.ajax({
             type: 'GET',
-            url: 'http://127.0.0.1:8082/getMatchSummary?fileName=' + fileName,
+            url: 'http://127.0.0.1:8082/getMatchSummary?fileName=' + fileName + '&onFileClick=' + onFileClick,
             success: function(data){
                 console.log(data);
                 jsonStats = data;
                 setMatchSummary(data)
+                if (autoStartReplay == "true") {
+                    $('.circleIconOuter').click();
+                }
             },
             error: function(err) {
                 console.log(err);
@@ -923,12 +935,12 @@ $(document).ready(function(){
     })
 
     $(document).on('click', '.circleIconOuter', function(){
-        var fileName = jsonStats['File Name'];
         var myModal = new bootstrap.Modal(document.getElementById('loadIndividualReplayModal'))
         myModal.show();
 
         axios.post('http://127.0.0.1:8082/startPlayback', {
-            fileName: fileName
+            fileName: globalFileName,
+            onFileClick: globalOnFileClick
         })
         .then(function (response) {
             console.log(response);

@@ -1,18 +1,44 @@
 {
   "name": "citruslauncher",
-  "version": "0.1.6",
+  "version": "0.0.3",
   "icon": "citrus-logo.ico",
   "description": "Application to launch Citrus Replay files and show match statistics",
   "main": "main.js",
+  "build": {
+    "appId": "com.github.hueybud.fakecitruslauncher",
+    "fileAssociations": {
+      "ext": "cit",
+      "name": "cit",
+      "description": "Citrus File",
+      "icon": "./Citrus_256x256.ico"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "./Citrus_256x256.ico"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "hueybud",
+      "repo": "fake-citrus-launcher"
+    },
+    "artifactName": "Citrus-Launcher-${version}.${ext}",
+    "productName": "Citrus Launcher"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron . wesArgNo --dev",
+    "app:dir": "electron-builder --dir",
+    "app:dist": "electron-builder"
   },
   "author": "Project Citrus",
   "license": "ISC",
   "dependencies": {
     "@electron/remote": "^2.0.8",
     "axios": "^0.27.2",
+    "electron-log": "^4.4.8",
+    "electron-updater": "^5.3.0",
     "etl": "^0.7.0",
     "express": "^4.18.1",
     "unzip-stream": "^0.3.1",
@@ -20,6 +46,6 @@
   },
   "devDependencies": {
     "electron": "^18.2.3",
-    "electron-winstaller": "^5.1.0"
+    "electron-builder": "^23.6.0"
   }
 }

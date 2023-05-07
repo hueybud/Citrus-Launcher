@@ -8,9 +8,42 @@ const expressApp = require('./server');
 const fs = require('fs');
 const { exec } = require('child_process');
 const { default: axios } = require('axios');
+const { autoUpdater } = require("electron-updater");
+const log = require("electron-log")
+const setProcessArgs = require("./processWrapper").setProcessArgs;
+const createSettingsJSON = require("./api").createSettingsJSON;
 var mainWindow;
 
+console.log(process.argv);
+setProcessArgs(process.argv);
 
+class AppUpdater {
+  constructor() {
+    log.transports.file.level = "info";
+    autoUpdater.on('checking-for-update', function() {
+      console.log("checking for update")
+    })
+    autoUpdater.on('update-available', function(info) {
+      console.log("update is available")
+      console.log(info)
+    });
+    autoUpdater.on('update-not-available', function(info) {
+      console.log("update is not available")
+      console.log(info)
+    });
+    autoUpdater.on('update-downloaded', function(info) {
+      console.log("update downloaded")
+      console.log(info)
+    });
+    autoUpdater.on('error', function(err) {
+      console.log("error fetching update")
+      console.err(err);
+    })
+    autoUpdater.logger = log;
+    autoUpdater.autoDownload = true;
+    autoUpdater.checkForUpdatesAndNotify()
+  }
+}
 
 const createWindow = () => {
   // Create the browser window.
@@ -18,16 +51,32 @@ const createWindow = () => {
     minWidth: 1100,
     minHeight: 700,
     show: false,
-    icon: path.join(__dirname, 'assets', 'images', 'citrus_32x32.png')
+    icon: path.join(__dirname, 'assets', 'images', 'citrus_32x32.png'),
+    title: `Citrus Launcher ${app.getVersion()}`
   })
 
-  // and load the index.html of the app.
-  mainWindow.loadFile('index.html')
+  if (process.argv[3] == '--dev') {
+    if (process.argv[3] == '--dev' && process.argv[2] == 'wesArg') {
+      mainWindow.loadFile("matchSummary.html", {query: {fileName: 'Game_April_27_2023_23_10_53.cit', autoStartReplay: true, onFileClick: false}})
+    } else {
+      // and load the index.html of the app.
+      mainWindow.loadFile('index.html')
+    }
+  }
+   else {
+    if (fs.existsSync(process.argv[1]) && path.extname(process.argv[1]) == ".cit") {
+      mainWindow.loadFile("matchSummary.html", {query: {fileName: process.argv[1], autoStartReplay: true, onFileClick: true}})
+    } else {
+      mainWindow.loadFile('index.html')
+    }
+  }
+
+  //mainWindow.loadFile('index.html')
     // Open the DevTools.
   //mainWindow.webContents.openDevTools()
   mainWindow.maximize();
   mainWindow.show();
-  checkVersions()
+  new AppUpdater();
   
   mainWindow.on('closed', function(e){
     console.log("closing our window")
@@ -46,8 +95,10 @@ app.whenReady().then(async () => {
     dialog.showErrorBox("Port Error", "Error when trying to listen to port 8082. Please close any applications using it. Citrus Launcher will close after you accept this message.")
     app.quit();
   } else {
-    await createSettingsJSON('settings.json')
+    console.log(`version: ${app.getVersion()}`)
+    await createSettingsJSON()
     createWindow()
+
   
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
@@ -123,30 +174,4 @@ function promptUpdate(localVersion, remoteVersion) {
     }
   })
   
-}
-
-function createSettingsJSON(filename) {
-  return new Promise(function(resolve, reject){
-    fs.open(filename,'r',function(err, fd){
-      if (err) {
-        var data = {
-          "pathToISO": "",
-          "isoHash": "",
-          "pathToDolphin": "",
-          "pathToReplays": ""
-        }
-        fs.writeFile(filename, JSON.stringify(data), function(err) {
-            if(err) {
-                console.log(err);
-                resolve("done")
-            }
-            console.log("The settings file was created");
-            resolve("done")
-        });
-      } else {
-        console.log("The settings file already exists");
-        resolve("done")
-      }
-    });
-  })
 }

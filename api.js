@@ -7,6 +7,7 @@ const os = require('os');
 const { exec } = require('child_process');
 const { createHash } = require('crypto');
 const { Stream } = require('stream');
+const { isDev, getProcessArgs, getSettingsPath } = require("./processWrapper");
 
 async function getCitrusFilesNames(citrusReplaysPath, extension) {
   let listOfCitrusFiles;
@@ -25,16 +26,25 @@ async function getCitrusFilesNames(citrusReplaysPath, extension) {
   }
   listOfCitrusFiles = listOfCitrusFiles.filter(file => file.name.match(new RegExp(`.*\.(${extension})$`, 'ig')) && file.size > 300000);
   listOfCitrusFiles = listOfCitrusFiles.map(file => file.name);
-  console.log(listOfCitrusFiles);
+  //console.log(listOfCitrusFiles);
   return listOfCitrusFiles
 }
 
-function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection) {
+function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection, onFileClick) {
     const expectedAmountOfFiles = 3;
     var seenFiles = 0;
     let foundJson = false;
+    let pathToCitrusFile;
+    console.log(onFileClick)
+    if (onFileClick == "true") {
+      // user is using a CIT file as a command line arg
+      // could be coming from anywhere so read in where it's coming from
+      pathToCitrusFile = getProcessArgs()[1];
+    } else {
+      pathToCitrusFile = path.join(citrusReplaysPath, citrusFile);
+    }
     return new Promise(function(resolve, reject){
-        fs.createReadStream(path.join(citrusReplaysPath, citrusFile))
+        fs.createReadStream(pathToCitrusFile)
         .pipe(unzipStream.Parse())
         .on('error', function(unzipError){
           console.log(unzipError)
@@ -79,9 +89,13 @@ function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection) 
     })
 }
 
-function startPlayback(fileName){
+function startPlayback(fileName, onFileClick){
+
+  // fileName is vague as it can be a relative file name or it can be a command-line full path file name
+  // if onFileClick is true, fileName is a full file name. otherwise, it's relative
+
   return new Promise(async function(resolve, reject){
-    var settingsJSON = JSON.parse(fs.readFileSync('settings.json'));
+    var settingsJSON = readSettingsFile();
     // check for blank fields
     for (elem in settingsJSON) {
       if (settingsJSON[elem] == "" && elem != "isoHash") {
@@ -98,7 +112,13 @@ function startPlayback(fileName){
     // comapre hashes now
 
     // get hash from DTM file
-    var dtmHash = await getReplayHash(settingsJSON, fileName);
+    let pathToCitrusFile;
+    if (onFileClick == "true") {
+      pathToCitrusFile = fileName
+    } else {
+      pathToCitrusFile = path.join(settingsJSON['pathToReplays'], fileName);
+    }
+    var dtmHash = await getReplayHash(pathToCitrusFile);
 
     // get hash from iso file
     var isoHash = await getMD5ISO(settingsJSON['pathToISO'])
@@ -124,7 +144,7 @@ function startPlayback(fileName){
       return;
     }
 
-    var combinedFileName = '"' + path.join(settingsJSON['pathToReplays'], fileName) + '"';
+    var combinedFileName = '"' + pathToCitrusFile + '"';
     var pathToDolphin = '"' + settingsJSON['pathToDolphin'] + '"';
     var pathToISO = '"' + settingsJSON['pathToISO'] + '"';
     pathToDolphin += " -m " + combinedFileName;
@@ -137,12 +157,12 @@ function startPlayback(fileName){
   })
 }
 
-function getReplayHash(settingsJSON, fileName) {
+function getReplayHash(pathToCitrusFile) {
   var seenFiles = 0;
   let jsonFound = false;
   return new Promise(function(resolve, reject){
     var dtmHash;
-    fs.createReadStream(path.join(settingsJSON['pathToReplays'], fileName))
+    fs.createReadStream(pathToCitrusFile)
     .pipe(unzipStream.Parse())
     .on('error', function(unzipError){
       console.log(unzipError)
@@ -221,10 +241,50 @@ function hashToISOName(hash) {
       return "Non-Documented ISO"
   }
 }
+
+function readSettingsFile() {
+  try {
+    return JSON.parse(fs.readFileSync(getSettingsPath()))
+  } catch (err) {
+    console.error("Error reading settings file");
+    throw new Error(err);
+  }
+}
+
+async function createSettingsJSON() {
+  const settingsPath = getSettingsPath();
+  return new Promise(function(resolve, reject){
+    fs.open(settingsPath,'r',function(err, fd){
+      if (err) {
+        var data = {
+          "pathToISO": "",
+          "isoHash": "",
+          "pathToDolphin": "",
+          "pathToReplays": "",
+          "processStuff": JSON.stringify(process.argv)
+        }
+        fs.writeFile(settingsPath, JSON.stringify(data), function(err) {
+            if(err) {
+                console.log(err);
+                resolve("done")
+            }
+            console.log("The settings file was created");
+            resolve("done")
+        });
+      } else {
+        console.log("The settings file already exists");
+        resolve("done")
+      }
+    });
+  })
+}
+
 module.exports.collectCitrusNames = getCitrusFilesNames;
 module.exports.getCitrusFileJSON = getCitrusFileJSON;
 module.exports.startPlayback = startPlayback;
 module.exports.getMD5ISO = getMD5ISO;
+module.exports.readSettingsFile = readSettingsFile;
+module.exports.createSettingsJSON = createSettingsJSON;
 
 var mockedCollectionJSON = [
     {

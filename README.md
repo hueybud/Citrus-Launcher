@@ -6,6 +6,10 @@ Citrus Launcher is a Windows-based desktop application designed to launch Citrus
 
 The application can be downloaded from the [Releases](https://github.com/hueybud/Citrus-Launcher/releases) tab on GitHub. After unzipping the zip file, the executable can be launched via Citrus Launcher.exe.
 
+# Development
+
+Developers can run the application by cloning the package and running `npm start`.
+
 # Usage
 
 The application loads replay files (.CIT file extension) that are created from the Citrus Dolphin build. This is a custom version of Dolphin Emulator, a popular emulator used to play games from the Nintendo GameCube and Wii consoles. A link to the releases for Citrus Dolphin can be found here.
