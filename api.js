@@ -26,7 +26,7 @@ async function getCitrusFilesNames(citrusReplaysPath, extension) {
   }
   listOfCitrusFiles = listOfCitrusFiles.filter(file => file.name.match(new RegExp(`.*\.(${extension})$`, 'ig')) && file.size > 300000);
   listOfCitrusFiles = listOfCitrusFiles.map(file => file.name);
-  //console.log(listOfCitrusFiles);
+  console.log(listOfCitrusFiles);
   return listOfCitrusFiles
 }
 
@@ -251,6 +251,10 @@ function readSettingsFile() {
   }
 }
 
+function createFilesDB() {
+  console.log("here i am!");
+}
+
 async function createSettingsJSON() {
   const settingsPath = getSettingsPath();
   return new Promise(function(resolve, reject){
@@ -285,6 +289,7 @@ module.exports.startPlayback = startPlayback;
 module.exports.getMD5ISO = getMD5ISO;
 module.exports.readSettingsFile = readSettingsFile;
 module.exports.createSettingsJSON = createSettingsJSON;
+module.exports.createFilesDB = createFilesDB;
 
 var mockedCollectionJSON = [
     {
