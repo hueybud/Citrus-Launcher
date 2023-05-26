@@ -8,6 +8,7 @@ const { exec } = require('child_process');
 const { createHash } = require('crypto');
 const { Stream } = require('stream');
 const { isDev, getProcessArgs, getSettingsPath } = require("./processWrapper");
+const sqlite3 = require('sqlite3');
 
 async function getCitrusFilesNames(citrusReplaysPath, extension) {
   let listOfCitrusFiles;
@@ -252,7 +253,56 @@ function readSettingsFile() {
 }
 
 function createFilesDB() {
-  console.log("here i am!");
+  var settingsJSON = readSettingsFile();
+  var dbname =settingsJSON['pathToReplays'] + '\\citrus.db';
+  console.log('hello!');
+  var db;
+  new sqlite3.Database(dbname, sqlite3.OPEN_READWRITE, (err) => {
+    if (err && err.code == "SQLITE_CANTOPEN") {
+      createDatabase();
+      return;
+    } else if (err) {
+      console.log("Getting error " + err);
+      exit(1);
+    }
+    console.log('getting file liest!');
+    let fileList = getCitrusFilesNames(settingsJSON['pathToReplays'], '.cit');
+    console.log('now calling runQueries!');
+    runQueries(db, fileList);
+    console.log('huzzah!');
+  });
+}
+
+function createDatabase() {
+  var settingsJSON = readSettingsFile();
+  var dbname =settingsJSON['pathToReplays'] + '\\citrus.db';
+  var newdb = new sqlite3.Database(dbname, (err) => {
+      if (err) {
+          console.log("Getting error " + err);
+          exit(1);
+      }
+      createTables(newdb);
+  });
+}
+
+function createTables(newdb) {
+  newdb.exec(`
+  create table cit_files (
+      file_name text primary key not null,
+      is_uploaded bit,
+      json_data text
+  );`, ()  => {
+    //runQueries(newdb);
+  });
+}
+
+function runQueries(db, fileList) {
+  console.log('"running queries :P"')
+  for (let [key, value] of fileList) {
+    console.log(key + " = " + value);
+    }
+    
+  console.log('done!');
 }
 
 async function createSettingsJSON() {
