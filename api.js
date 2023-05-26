@@ -14,7 +14,7 @@ async function getCitrusFilesNames(citrusReplaysPath, extension) {
   let listOfCitrusFiles;
   try {
     listOfCitrusFiles = fs.readdirSync(citrusReplaysPath);
-    //console.log(listOfCitrusFiles);
+    
     listOfCitrusFiles = listOfCitrusFiles.map(fileName => ({
       name: fileName,
       time: fs.statSync(`${citrusReplaysPath}/${fileName}`).mtime.getTime(),
@@ -27,7 +27,7 @@ async function getCitrusFilesNames(citrusReplaysPath, extension) {
   }
   listOfCitrusFiles = listOfCitrusFiles.filter(file => file.name.match(new RegExp(`.*\.(${extension})$`, 'ig')) && file.size > 300000);
   listOfCitrusFiles = listOfCitrusFiles.map(file => file.name);
-  console.log(listOfCitrusFiles);
+  //console.log(listOfCitrusFiles);
   return listOfCitrusFiles
 }
 
@@ -256,8 +256,7 @@ async function createFilesDB() {
   var settingsJSON = readSettingsFile();
   var dbname =settingsJSON['pathToReplays'] + '\\citrus.db';
   console.log('hello!');
-  var db;
-  new sqlite3.Database(dbname, sqlite3.OPEN_READWRITE, (err) => {
+  var db = new sqlite3.Database(dbname, sqlite3.OPEN_READWRITE, (err) => {
     if (err && err.code == "SQLITE_CANTOPEN") {
       createDatabase();
       return;
@@ -301,7 +300,9 @@ function runQueries(db, fileList) {
   let i = 0;
   console.log(fileList.length);
   while (i < fileList.length) {
-    db.exec(`insert or ignore into cit_files(file_name, is_uploaded) values ( ?, ?);`, fileList[i], 0);
+    let x = `insert or ignore into cit_files(file_name, is_uploaded) values ('` + fileList[i] + `', 0);`;
+    console.log(x);
+    db.exec(x, () => {});
     console.log(fileList[i]);
     i++;
   }
