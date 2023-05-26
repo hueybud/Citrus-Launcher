@@ -252,7 +252,7 @@ function readSettingsFile() {
   }
 }
 
-function createFilesDB() {
+async function createFilesDB() {
   var settingsJSON = readSettingsFile();
   var dbname =settingsJSON['pathToReplays'] + '\\citrus.db';
   console.log('hello!');
@@ -265,12 +265,12 @@ function createFilesDB() {
       console.log("Getting error " + err);
       exit(1);
     }
-    console.log('getting file liest!');
-    let fileList = getCitrusFilesNames(settingsJSON['pathToReplays'], '.cit');
-    console.log('now calling runQueries!');
-    runQueries(db, fileList);
-    console.log('huzzah!');
   });
+  console.log('getting file liest!');
+  let fileList = await getCitrusFilesNames(settingsJSON['pathToReplays'], '.cit');
+  runQueries(db, fileList);
+  console.log('now calling runQueries!');
+  console.log('huzzah!');
 }
 
 function createDatabase() {
@@ -298,9 +298,13 @@ function createTables(newdb) {
 
 function runQueries(db, fileList) {
   console.log('"running queries :P"')
-  for (let [key, value] of fileList) {
-    console.log(key + " = " + value);
-    }
+  let i = 0;
+  console.log(fileList.length);
+  while (i < fileList.length) {
+    db.exec(`insert or ignore into cit_files(file_name, is_uploaded) values ( ?, ?);`, fileList[i], 0);
+    console.log(fileList[i]);
+    i++;
+  }
     
   console.log('done!');
 }
