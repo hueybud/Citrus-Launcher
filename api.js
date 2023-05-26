@@ -296,18 +296,26 @@ function createTables(newdb) {
 }
 
 function runQueries(db, fileList) {
+  var settingsJSON = readSettingsFile();
   console.log('"running queries :P"')
   let i = 0;
   console.log(fileList.length);
   while (i < fileList.length) {
-    let x = `insert or ignore into cit_files(file_name, is_uploaded) values ('` + fileList[i] + `', 0);`;
-    console.log(x);
-    db.exec(x, () => {});
+    console.log('here i go!');
+    runQuery(db, settingsJSON['pathToReplays'], fileList[i]);
     console.log(fileList[i]);
     i++;
-  }
+  };
     
   console.log('done!');
+}
+
+async function runQuery(db, replayPath, filename) {
+  let x = [];
+  let y = await getCitrusFileJSON(replayPath, filename, x);
+  //console.log(x);
+  await db.run("insert or ignore into cit_files(file_name, is_uploaded, json_data) values (?, ?, ?)", [filename, 0, x[0].stringify()]);
+  console.log('i ran the query!');
 }
 
 async function createSettingsJSON() {
