@@ -13,6 +13,7 @@ const log = require("electron-log")
 const setProcessArgs = require("./processWrapper").setProcessArgs;
 const createSettingsJSON = require("./api").createSettingsJSON;
 const createFilesDB = require("./api").createFilesDB;
+const syncFiles = require("./api").syncFiles;
 var mainWindow;
 
 console.log(process.argv);
@@ -98,7 +99,8 @@ app.whenReady().then(async () => {
   } else {
     console.log(`version: ${app.getVersion()}`)
     await createSettingsJSON()
-    createFilesDB()
+    //createFilesDB()
+    syncFiles()
     createWindow()
 
   

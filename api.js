@@ -1,3 +1,4 @@
+const { default: axios } = require('axios');
 const fs = require('fs');
 const unzipper = require('unzipper');
 const unzipStream = require('unzip-stream');
@@ -31,7 +32,7 @@ async function getCitrusFilesNames(citrusReplaysPath, extension) {
   return listOfCitrusFiles
 }
 
-function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection, onFileClick) {
+function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection, onFileClick, useRaw) {
     const expectedAmountOfFiles = 3;
     var seenFiles = 0;
     let foundJson = false;
@@ -69,7 +70,12 @@ function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection, 
               })
               entry.on('end', function(){
                 try {
-                  citrusJSONCollection.push(JSON.parse(content.toString('utf-8')));
+                  if (useRaw == "true") {
+                    citrusJSONCollection.push(content.toString('utf-8'));
+                  }
+                  else {
+                    citrusJSONCollection.push(JSON.parse(content.toString('utf-8')));
+                  }
                   resolve("done")
                 } catch (err) {
                   resolve("could not parse json")
@@ -252,6 +258,57 @@ function readSettingsFile() {
   }
 }
 
+async function syncFiles() {
+  console.log("syncing files!");
+  var settingsJSON = readSettingsFile();
+  var dbname =settingsJSON['pathToReplays'] + '\\citrus.db';
+  var localDb = new sqlite3.Database(dbname);
+
+  // get list of files in database with is_uploaded = 0
+  x = localDb.prepare("select * from cit_files where is_uploaded = 0");
+  x.each(function(err, row) {
+    syncToGlobalDb(row.file_name, row.json_data);
+  }, function(err, count) {
+    x.finalize();
+  });
+  // for each one found
+  // attempt to upload to database
+  // then set is_loade = 1
+}
+
+async function syncToGlobalDb(filename, jsondata) {
+  var settingsJSON = readSettingsFile();
+  var dbname =settingsJSON['pathToReplays'] + '\\citrus.db';
+  var localDb = new sqlite3.Database(dbname);
+
+  await console.log('syncToGlobalDb');
+  await console.log(filename);
+  await console.log(jsondata);
+  await console.log('---');
+
+  let x = JSON.parse(jsondata);
+
+  try {
+    await axios.post('https://api.mariostrikers.gg/citrus/uploadStats', x/*, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }*/);
+  } catch (err) { console.log(err); }
+
+  /*
+  var http = require('http');
+  var client = http.request('https://mariostrikers.gg');
+  var request = client.request('POST', '/citrus/uploadStats');
+  request.write('stuff');
+  request.end();
+  request.on("response", function (response) {
+    console.log('api response: ');
+    console.log(response);
+  })
+  */
+}
+
 async function createFilesDB() {
   var settingsJSON = readSettingsFile();
   var dbname =settingsJSON['pathToReplays'] + '\\citrus.db';
@@ -265,11 +322,8 @@ async function createFilesDB() {
       exit(1);
     }
   });
-  console.log('getting file liest!');
   let fileList = await getCitrusFilesNames(settingsJSON['pathToReplays'], '.cit');
   runQueries(db, fileList);
-  console.log('now calling runQueries!');
-  console.log('huzzah!');
 }
 
 function createDatabase() {
@@ -295,27 +349,19 @@ function createTables(newdb) {
   });
 }
 
-function runQueries(db, fileList) {
+async function runQueries(db, fileList) {
   var settingsJSON = readSettingsFile();
-  console.log('"running queries :P"')
   let i = 0;
-  console.log(fileList.length);
   while (i < fileList.length) {
-    console.log('here i go!');
     runQuery(db, settingsJSON['pathToReplays'], fileList[i]);
-    console.log(fileList[i]);
     i++;
   };
-    
-  console.log('done!');
 }
 
 async function runQuery(db, replayPath, filename) {
   let x = [];
-  let y = await getCitrusFileJSON(replayPath, filename, x);
-  //console.log(x);
-  await db.run("insert or ignore into cit_files(file_name, is_uploaded, json_data) values (?, ?, ?)", [filename, 0, x[0].stringify()]);
-  console.log('i ran the query!');
+  await getCitrusFileJSON(replayPath, filename, x, "false", "true");
+  await db.run("insert or ignore into cit_files(file_name, is_uploaded, json_data) values (?, ?, ?)", [filename, 0, x[0]]);
 }
 
 async function createSettingsJSON() {
@@ -353,6 +399,7 @@ module.exports.getMD5ISO = getMD5ISO;
 module.exports.readSettingsFile = readSettingsFile;
 module.exports.createSettingsJSON = createSettingsJSON;
 module.exports.createFilesDB = createFilesDB;
+module.exports.syncFiles = syncFiles;
 
 var mockedCollectionJSON = [
     {
