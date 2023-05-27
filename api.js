@@ -281,19 +281,13 @@ async function syncToGlobalDb(filename, jsondata) {
   var dbname =settingsJSON['pathToReplays'] + '\\citrus.db';
   var localDb = new sqlite3.Database(dbname);
 
-  await console.log('syncToGlobalDb');
-  await console.log(filename);
-  await console.log(jsondata);
-  await console.log('---');
-
-  let x = JSON.parse(jsondata);
+  let data = JSON.parse(jsondata);
 
   try {
-    await axios.post('https://api.mariostrikers.gg/citrus/uploadStats', x/*, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }*/);
+    await axios.post('https://api.mariostrikers.gg/citrus/uploadStats', data);
+
+    // i can't do this, it breaks due to database being "in use"
+    //await localDb.run("update cit_files set is_uploaded = 1 where file_name = ?", [filename]);
   } catch (err) { console.log(err); }
 
   /*
