@@ -264,7 +264,7 @@ async function syncFiles() {
   var localDb = new sqlite3.Database(dbname);
   
   // get list of files in database with is_uploaded = 0
-  x = localDb.prepare("select * from cit_data where file_name in (select file_name from cit_files where is_uploaded = 0)");
+  x = localDb.prepare("select * from cit_files where is_uploaded = 0");
   x.each(function(err, row) {
     syncToGlobalDb(row.file_name, row.json_data, localDb);
   }, function(err, count) {
