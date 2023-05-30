@@ -99,7 +99,7 @@ app.whenReady().then(async () => {
   } else {
     console.log(`version: ${app.getVersion()}`)
     await createSettingsJSON()
-    //createFilesDB()
+    createFilesDB()
     syncFiles()
     createWindow()
 

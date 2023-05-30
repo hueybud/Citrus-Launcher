@@ -259,48 +259,27 @@ function readSettingsFile() {
 }
 
 async function syncFiles() {
-  console.log("syncing files!");
   var settingsJSON = readSettingsFile();
   var dbname =settingsJSON['pathToReplays'] + '\\citrus.db';
   var localDb = new sqlite3.Database(dbname);
-
+  
   // get list of files in database with is_uploaded = 0
-  x = localDb.prepare("select * from cit_files where is_uploaded = 0");
+  x = localDb.prepare("select * from cit_data where file_name in (select file_name from cit_files where is_uploaded = 0)");
   x.each(function(err, row) {
-    syncToGlobalDb(row.file_name, row.json_data);
+    syncToGlobalDb(row.file_name, row.json_data, localDb);
   }, function(err, count) {
     x.finalize();
   });
-  // for each one found
-  // attempt to upload to database
-  // then set is_loade = 1
 }
 
-async function syncToGlobalDb(filename, jsondata) {
-  var settingsJSON = readSettingsFile();
-  var dbname =settingsJSON['pathToReplays'] + '\\citrus.db';
-  var localDb = new sqlite3.Database(dbname);
-
+async function syncToGlobalDb(filename, jsondata, localDb) {
   let data = JSON.parse(jsondata);
 
   try {
     await axios.post('https://api.mariostrikers.gg/citrus/uploadStats', data);
 
-    // i can't do this, it breaks due to database being "in use"
-    //await localDb.run("update cit_files set is_uploaded = 1 where file_name = ?", [filename]);
+    await localDb.run("update cit_files set is_uploaded = 1 where file_name = ?", [filename]);
   } catch (err) { console.log(err); }
-
-  /*
-  var http = require('http');
-  var client = http.request('https://mariostrikers.gg');
-  var request = client.request('POST', '/citrus/uploadStats');
-  request.write('stuff');
-  request.end();
-  request.on("response", function (response) {
-    console.log('api response: ');
-    console.log(response);
-  })
-  */
 }
 
 async function createFilesDB() {

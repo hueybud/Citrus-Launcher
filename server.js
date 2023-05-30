@@ -141,7 +141,7 @@ app.post('/updateDolphinFile', function(req, res){
     res.end();
 })
 app.get('/getMatchSummary', async function(req, res){
-    console.log("match summary request: " + JSON.stringify(req.query))
+    //console.log("match summary request: " + JSON.stringify(req.query))
     var settingsJSON = api.readSettingsFile();
     var singularJSONCollection = [];
     await api.getCitrusFileJSON(settingsJSON['pathToReplays'], req.query.fileName, singularJSONCollection, req.query.onFileClick);
