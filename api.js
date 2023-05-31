@@ -258,10 +258,7 @@ function readSettingsFile() {
   }
 }
 
-async function syncFiles() {
-  var settingsJSON = readSettingsFile();
-  var dbname =settingsJSON['pathToReplays'] + '\\citrus.db';
-  var localDb = new sqlite3.Database(dbname);
+async function syncFiles(localDb) {
   
   // get list of files in database with is_uploaded = 0
   x = localDb.prepare("select * from cit_files where is_uploaded = 0");
@@ -288,7 +285,7 @@ async function createFilesDB() {
   console.log('hello!');
   var db = new sqlite3.Database(dbname, sqlite3.OPEN_READWRITE, (err) => {
     if (err && err.code == "SQLITE_CANTOPEN") {
-      createDatabase();
+      createDatabase(runQueries);
       return;
     } else if (err) {
       console.log("Getting error " + err);
@@ -297,6 +294,7 @@ async function createFilesDB() {
   });
   let fileList = await getCitrusFilesNames(settingsJSON['pathToReplays'], '.cit');
   runQueries(db, fileList);
+  syncFiles(db);
 }
 
 function createDatabase() {
@@ -308,6 +306,9 @@ function createDatabase() {
           exit(1);
       }
       createTables(newdb);
+      if (typeof callback === 'function') {
+        callback(); // Call the callback function once the database is created
+      }
   });
 }
 
