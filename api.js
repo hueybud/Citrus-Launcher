@@ -15,14 +15,14 @@ async function getCitrusFilesNames(citrusReplaysPath, extension) {
   let listOfCitrusFiles;
   try {
     listOfCitrusFiles = fs.readdirSync(citrusReplaysPath);
-    
+
     listOfCitrusFiles = listOfCitrusFiles.map(fileName => ({
       name: fileName,
       time: fs.statSync(`${citrusReplaysPath}/${fileName}`).mtime.getTime(),
       size: fs.statSync(`${citrusReplaysPath}/${fileName}`).size
     }))
-    .sort((a, b) => b.time - a.time)
-    
+      .sort((a, b) => b.time - a.time)
+
   } catch (error) {
     return error.code
   }
@@ -33,75 +33,75 @@ async function getCitrusFilesNames(citrusReplaysPath, extension) {
 }
 
 function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection, onFileClick, useRaw) {
-    const expectedAmountOfFiles = 3;
-    var seenFiles = 0;
-    let foundJson = false;
-    let pathToCitrusFile;
-    console.log(onFileClick)
-    if (onFileClick == "true") {
-      // user is using a CIT file as a command line arg
-      // could be coming from anywhere so read in where it's coming from
-      pathToCitrusFile = getProcessArgs()[1];
-    } else {
-      pathToCitrusFile = path.join(citrusReplaysPath, citrusFile);
-    }
-    return new Promise(function(resolve, reject){
-        fs.createReadStream(pathToCitrusFile)
-        .pipe(unzipStream.Parse())
-        .on('error', function(unzipError){
-          console.log(unzipError)
-          resolve("could not unzip cit file")
-        })
-        .on('end', function(){
-          if (seenFiles == 0 || seenFiles != 3) {
-            console.log(`could not verify this CIT has JSON file. seenFiles is ${seenFiles} for ${citrusFile}`)
-            resolve("could not verify this CIT has JSON file")
-          }
-        })
-        .pipe(Stream.Transform({
-          objectMode: true,
-          transform: async function(entry, e, cb) {
-            seenFiles++;
-            if (entry.path == "output.json") {
-              foundJson = true;
-              var content = ""
-              entry.on('data', function(chunk){
-                content += chunk;
-              })
-              entry.on('end', function(){
-                try {
-                  if (useRaw == "true") {
-                    citrusJSONCollection.push(content.toString('utf-8'));
-                  }
-                  else {
-                    citrusJSONCollection.push(JSON.parse(content.toString('utf-8')));
-                  }
-                  resolve("done")
-                } catch (err) {
-                  resolve("could not parse json")
+  const expectedAmountOfFiles = 3;
+  var seenFiles = 0;
+  let foundJson = false;
+  let pathToCitrusFile;
+  console.log(onFileClick)
+  if (onFileClick == "true") {
+    // user is using a CIT file as a command line arg
+    // could be coming from anywhere so read in where it's coming from
+    pathToCitrusFile = getProcessArgs()[1];
+  } else {
+    pathToCitrusFile = path.join(citrusReplaysPath, citrusFile);
+  }
+  return new Promise(function (resolve, reject) {
+    fs.createReadStream(pathToCitrusFile)
+      .pipe(unzipStream.Parse())
+      .on('error', function (unzipError) {
+        console.log(unzipError)
+        resolve("could not unzip cit file")
+      })
+      .on('end', function () {
+        if (seenFiles == 0 || seenFiles != 3) {
+          console.log(`could not verify this CIT has JSON file. seenFiles is ${seenFiles} for ${citrusFile}`)
+          resolve("could not verify this CIT has JSON file")
+        }
+      })
+      .pipe(Stream.Transform({
+        objectMode: true,
+        transform: async function (entry, e, cb) {
+          seenFiles++;
+          if (entry.path == "output.json") {
+            foundJson = true;
+            var content = ""
+            entry.on('data', function (chunk) {
+              content += chunk;
+            })
+            entry.on('end', function () {
+              try {
+                if (useRaw == "true") {
+                  citrusJSONCollection.push(content.toString('utf-8'));
                 }
-              })
-            }
-            else {
-              entry.autodrain();
-              cb();
-                // resolve to keep the code going but let us know no json was found
-              if (seenFiles == expectedAmountOfFiles && !foundJson) {
-                console.log("done but no json found")
-                resolve("done but no json found")
+                else {
+                  citrusJSONCollection.push(JSON.parse(content.toString('utf-8')));
+                }
+                resolve("done")
+              } catch (err) {
+                resolve("could not parse json")
               }
+            })
+          }
+          else {
+            entry.autodrain();
+            cb();
+            // resolve to keep the code going but let us know no json was found
+            if (seenFiles == expectedAmountOfFiles && !foundJson) {
+              console.log("done but no json found")
+              resolve("done but no json found")
             }
           }
-        }))
-    })
+        }
+      }))
+  })
 }
 
-function startPlayback(fileName, onFileClick){
+function startPlayback(fileName, onFileClick) {
 
   // fileName is vague as it can be a relative file name or it can be a command-line full path file name
   // if onFileClick is true, fileName is a full file name. otherwise, it's relative
 
-  return new Promise(async function(resolve, reject){
+  return new Promise(async function (resolve, reject) {
     var settingsJSON = readSettingsFile();
     // check for blank fields
     for (elem in settingsJSON) {
@@ -167,29 +167,29 @@ function startPlayback(fileName, onFileClick){
 function getReplayHash(pathToCitrusFile) {
   var seenFiles = 0;
   let jsonFound = false;
-  return new Promise(function(resolve, reject){
+  return new Promise(function (resolve, reject) {
     var dtmHash;
     fs.createReadStream(pathToCitrusFile)
-    .pipe(unzipStream.Parse())
-    .on('error', function(unzipError){
-      console.log(unzipError)
-      resolve("could not unzip cit file")
-    })
-    .pipe(Stream.Transform({
+      .pipe(unzipStream.Parse())
+      .on('error', function (unzipError) {
+        console.log(unzipError)
+        resolve("could not unzip cit file")
+      })
+      .pipe(Stream.Transform({
         objectMode: true,
-        transform: function(entry, e, cb) {
+        transform: function (entry, e, cb) {
           seenFiles++;
           if (entry.path == "output.json") {
             foundJson = true;
             var content = ""
-            entry.on('data', function(chunk){
+            entry.on('data', function (chunk) {
               content += chunk;
             })
-            entry.on('end', function(){
+            entry.on('end', function () {
               try {
                 content = JSON.parse(content.toString('utf-8'))
               } catch (err) {
-                resolve ("could not parse json")
+                resolve("could not parse json")
               }
               dtmHash = content['Game Hash']
               console.log(dtmHash);
@@ -205,7 +205,7 @@ function getReplayHash(pathToCitrusFile) {
             }
           }
         }
-    }))
+      }))
   })
 }
 
@@ -221,20 +221,20 @@ function settingsJSONPropsToErrorNames(propertyName) {
 }
 
 function getMD5ISO(filePath) {
-  return new Promise(function(resolve, reject){
+  return new Promise(function (resolve, reject) {
     const hash = createHash('md5')
     const input = fs.createReadStream(filePath);
     input.on('readable', () => {
-    // Only one element is going to be produced by the
-    // hash stream.
-    const data = input.read();
-    if (data)
-      hash.update(data);
-    else {
-      resolve(hash.digest('hex'))
-      //console.log(`${hash.digest('hex')} ${filePath}`);
-    }
-  });
+      // Only one element is going to be produced by the
+      // hash stream.
+      const data = input.read();
+      if (data)
+        hash.update(data);
+      else {
+        resolve(hash.digest('hex'))
+        //console.log(`${hash.digest('hex')} ${filePath}`);
+      }
+    });
   })
 }
 
@@ -259,12 +259,11 @@ function readSettingsFile() {
 }
 
 async function syncFiles(localDb) {
-  
-  // get list of files in database with is_uploaded = 0
-  x = localDb.prepare("select * from cit_files where is_uploaded = 0");
-  x.each(function(err, row) {
+  // get list of files in the database with is_uploaded = 0
+  x = localDb.prepare("SELECT * FROM cit_files WHERE is_uploaded = 0");
+  x.each(function (err, row) {
     syncToGlobalDb(row.file_name, row.json_data, localDb);
-  }, function(err, count) {
+  }, function (err, count) {
     x.finalize();
   });
 }
@@ -274,74 +273,82 @@ async function syncToGlobalDb(filename, jsondata, localDb) {
 
   try {
     await axios.post('https://api.mariostrikers.gg/citrus/uploadStats', data);
-
-    await localDb.run("update cit_files set is_uploaded = 1 where file_name = ?", [filename]);
-  } catch (err) { console.log(err); }
+    await localDb.run("UPDATE cit_files SET is_uploaded = 1 WHERE file_name = ?", [filename]);
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 async function createFilesDB() {
   var settingsJSON = readSettingsFile();
-  var dbname =settingsJSON['pathToReplays'] + '\\citrus.db';
+  var dbname = settingsJSON['pathToReplays'] + '\\citrus.db';
   console.log('hello!');
   var db = new sqlite3.Database(dbname, sqlite3.OPEN_READWRITE, (err) => {
     if (err && err.code == "SQLITE_CANTOPEN") {
-      createDatabase(runQueries);
+      createDatabase(runQueriesAndSync);
       return;
     } else if (err) {
       console.log("Getting error " + err);
       exit(1);
     }
   });
+
   let fileList = await getCitrusFilesNames(settingsJSON['pathToReplays'], '.cit');
-  runQueries(db, fileList);
-  syncFiles(db);
+  await runQueriesAndSync(db, fileList);
 }
 
-function createDatabase() {
+function createDatabase(callback) {
   var settingsJSON = readSettingsFile();
-  var dbname =settingsJSON['pathToReplays'] + '\\citrus.db';
+  var dbname = settingsJSON['pathToReplays'] + '\\citrus.db';
   var newdb = new sqlite3.Database(dbname, (err) => {
-      if (err) {
-          console.log("Getting error " + err);
-          exit(1);
-      }
-      createTables(newdb);
-      if (typeof callback === 'function') {
-        callback(); // Call the callback function once the database is created
-      }
+    if (err) {
+      console.log("Getting error " + err);
+      exit(1);
+    }
+    createTables(newdb);
+    if (typeof callback === 'function') {
+      callback(newdb); // Call the callback function once the database is created
+    }
   });
 }
 
 function createTables(newdb) {
   newdb.exec(`
-  create table cit_files (
-      file_name text primary key not null,
-      is_uploaded bit,
-      json_data text
-  );`, ()  => {
-    //runQueries(newdb);
+    CREATE TABLE IF NOT EXISTS cit_files (
+      file_name TEXT PRIMARY KEY NOT NULL,
+      is_uploaded BIT,
+      json_data TEXT
+    );`, () => {
+    // Optional: Do something after creating the table
   });
+}
+
+async function runQueriesAndSync(db, fileList) {
+  await runQueries(db, fileList);
+  syncFiles(db);
 }
 
 async function runQueries(db, fileList) {
   var settingsJSON = readSettingsFile();
   let i = 0;
   while (i < fileList.length) {
-    runQuery(db, settingsJSON['pathToReplays'], fileList[i]);
+    await runQuery(db, settingsJSON['pathToReplays'], fileList[i]);
     i++;
   };
+  console.log('Queries executed.');
 }
 
 async function runQuery(db, replayPath, filename) {
   let x = [];
   await getCitrusFileJSON(replayPath, filename, x, "false", "true");
-  await db.run("insert or ignore into cit_files(file_name, is_uploaded, json_data) values (?, ?, ?)", [filename, 0, x[0]]);
+  await db.run("INSERT OR IGNORE INTO cit_files (file_name, is_uploaded, json_data) VALUES (?, ?, ?)", [filename, 0, x[0]]);
 }
+
 
 async function createSettingsJSON() {
   const settingsPath = getSettingsPath();
-  return new Promise(function(resolve, reject){
-    fs.open(settingsPath,'r',function(err, fd){
+  return new Promise(function (resolve, reject) {
+    fs.open(settingsPath, 'r', function (err, fd) {
       if (err) {
         var data = {
           "pathToISO": "",
@@ -350,13 +357,13 @@ async function createSettingsJSON() {
           "pathToReplays": "",
           "processStuff": JSON.stringify(process.argv)
         }
-        fs.writeFile(settingsPath, JSON.stringify(data), function(err) {
-            if(err) {
-                console.log(err);
-                resolve("done")
-            }
-            console.log("The settings file was created");
+        fs.writeFile(settingsPath, JSON.stringify(data), function (err) {
+          if (err) {
+            console.log(err);
             resolve("done")
+          }
+          console.log("The settings file was created");
+          resolve("done")
         });
       } else {
         console.log("The settings file already exists");
@@ -376,103 +383,103 @@ module.exports.createFilesDB = createFilesDB;
 module.exports.syncFiles = syncFiles;
 
 var mockedCollectionJSON = [
-    {
-      "File Name": "Game_May_17_2022_14_35_37.cit",
-      "Date": "May 17 2022 14:35:37",
-      "Controller Port Info": {
-        "Controller Port 0": 0,
-        "Controller Port 1": 65535,
-        "Controller Port 2": 65535,
-        "Controller Port 3": 65535
-      },
-      "Left Side Captain ID": "6",
-      "Left Side Sidekick ID": "3",
-      "Right Side Captain ID": "3",
-      "Right Side Sidekick ID": "0",
-      "Score": "1-0",
-      "Stadium ID": "1",
-      "Left Side Match Stats": {
-        "Goals": "1",
-        "Shots": "1",
-        "Hits": "0",
-        "Steals": "0",
-        "Super Strikes": "0",
-        "Perfect Passes": "0"
-      },
-      "Right Side Match Stats": {
-        "Goals": "0",
-        "Shots": "0",
-        "Hits": "0",
-        "Steals": "0",
-        "Super Strikes": "0",
-        "Perfect Passes": "0"
-      }
+  {
+    "File Name": "Game_May_17_2022_14_35_37.cit",
+    "Date": "May 17 2022 14:35:37",
+    "Controller Port Info": {
+      "Controller Port 0": 0,
+      "Controller Port 1": 65535,
+      "Controller Port 2": 65535,
+      "Controller Port 3": 65535
     },
-    {
-      "File Name": "Game_May_17_2022_14_36_21.cit",
-      "Date": "May 17 2022 14:36:21",
-      "Controller Port Info": {
-        "Controller Port 0": 0,
-        "Controller Port 1": 65535,
-        "Controller Port 2": 65535,
-        "Controller Port 3": 65535
-      },
-      "Left Side Captain ID": "6",
-      "Left Side Sidekick ID": "3",
-      "Right Side Captain ID": "3",
-      "Right Side Sidekick ID": "0",
-      "Score": "1-0",
-      "Stadium ID": "1",
-      "Left Side Match Stats": {
-        "Goals": "1",
-        "Shots": "1",
-        "Hits": "0",
-        "Steals": "0",
-        "Super Strikes": "0",
-        "Perfect Passes": "0"
-      },
-      "Right Side Match Stats": {
-        "Goals": "0",
-        "Shots": "0",
-        "Hits": "0",
-        "Steals": "0",
-        "Super Strikes": "0",
-        "Perfect Passes": "0"
-      }
+    "Left Side Captain ID": "6",
+    "Left Side Sidekick ID": "3",
+    "Right Side Captain ID": "3",
+    "Right Side Sidekick ID": "0",
+    "Score": "1-0",
+    "Stadium ID": "1",
+    "Left Side Match Stats": {
+      "Goals": "1",
+      "Shots": "1",
+      "Hits": "0",
+      "Steals": "0",
+      "Super Strikes": "0",
+      "Perfect Passes": "0"
     },
-    {
-      "File Name": "Game_May_18_2022_09_18_47.cit",
-      "Date": "May 18 2022 09:18:47",
-      "Controller Port Info": {
-        "Controller Port 0": 0,
-        "Controller Port 1": 65535,
-        "Controller Port 2": 65535,
-        "Controller Port 3": 65535
-      },
-      "Left Side Captain ID": "1",
-      "Left Side Sidekick ID": "3",
-      "Right Side Captain ID": "7",
-      "Right Side Sidekick ID": "1",
-      "Score": "6-7",
-      "Stadium ID": "2",
-      "Left Side Match Stats": {
-        "Goals": "6",
-        "Shots": "24",
-        "Hits": "20",
-        "Steals": "11",
-        "Super Strikes": "0",
-        "Perfect Passes": "2"
-      },
-      "Right Side Match Stats": {
-        "Goals": "7",
-        "Shots": "45",
-        "Hits": "27",
-        "Steals": "15",
-        "Super Strikes": "0",
-        "Perfect Passes": "14"
-      }
+    "Right Side Match Stats": {
+      "Goals": "0",
+      "Shots": "0",
+      "Hits": "0",
+      "Steals": "0",
+      "Super Strikes": "0",
+      "Perfect Passes": "0"
     }
-  ]
+  },
+  {
+    "File Name": "Game_May_17_2022_14_36_21.cit",
+    "Date": "May 17 2022 14:36:21",
+    "Controller Port Info": {
+      "Controller Port 0": 0,
+      "Controller Port 1": 65535,
+      "Controller Port 2": 65535,
+      "Controller Port 3": 65535
+    },
+    "Left Side Captain ID": "6",
+    "Left Side Sidekick ID": "3",
+    "Right Side Captain ID": "3",
+    "Right Side Sidekick ID": "0",
+    "Score": "1-0",
+    "Stadium ID": "1",
+    "Left Side Match Stats": {
+      "Goals": "1",
+      "Shots": "1",
+      "Hits": "0",
+      "Steals": "0",
+      "Super Strikes": "0",
+      "Perfect Passes": "0"
+    },
+    "Right Side Match Stats": {
+      "Goals": "0",
+      "Shots": "0",
+      "Hits": "0",
+      "Steals": "0",
+      "Super Strikes": "0",
+      "Perfect Passes": "0"
+    }
+  },
+  {
+    "File Name": "Game_May_18_2022_09_18_47.cit",
+    "Date": "May 18 2022 09:18:47",
+    "Controller Port Info": {
+      "Controller Port 0": 0,
+      "Controller Port 1": 65535,
+      "Controller Port 2": 65535,
+      "Controller Port 3": 65535
+    },
+    "Left Side Captain ID": "1",
+    "Left Side Sidekick ID": "3",
+    "Right Side Captain ID": "7",
+    "Right Side Sidekick ID": "1",
+    "Score": "6-7",
+    "Stadium ID": "2",
+    "Left Side Match Stats": {
+      "Goals": "6",
+      "Shots": "24",
+      "Hits": "20",
+      "Steals": "11",
+      "Super Strikes": "0",
+      "Perfect Passes": "2"
+    },
+    "Right Side Match Stats": {
+      "Goals": "7",
+      "Shots": "45",
+      "Hits": "27",
+      "Steals": "15",
+      "Super Strikes": "0",
+      "Perfect Passes": "14"
+    }
+  }
+]
 
 //getCitrusFilesNames(path.join(os.homedir(), 'Documents', 'Dolphin Emulator', 'CitrusReplays'), '.cit');
 
