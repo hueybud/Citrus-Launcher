@@ -347,10 +347,20 @@ async function runQueries(db, fileList, replayPath) {
 }
 
 async function runQuery(db, replayPath, filename) {
-  let x = [];
-  await getCitrusFileJSON(replayPath, filename, x, "false", "true");
   try {
-    await db.run("INSERT OR IGNORE INTO cit_files (file_name, is_uploaded, json_data) VALUES (?, ?, ?)", [filename, 0, x[0]]);
+    const row = await db.get(
+      "SELECT is_uploaded FROM cit_files WHERE file_name = ?",
+      [filename]
+    );
+
+    if (!row || row.is_uploaded === 0) {
+      let x = [];
+      await getCitrusFileJSON(replayPath, filename, x, "false", "true");
+      await db.run(
+        "INSERT OR IGNORE INTO cit_files (file_name, is_uploaded, json_data) VALUES (?, ?, ?)",
+        [filename, 0, x[0]]
+      );
+    }
   } catch (err) {
     console.log("runQuery: " + err);
   }
