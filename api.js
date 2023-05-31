@@ -260,7 +260,7 @@ function readSettingsFile() {
 
 async function syncFiles(localDb) {
   // get list of files in the database with is_uploaded = 0
-  x = localDb.prepare("SELECT * FROM cit_files WHERE is_uploaded = 0");
+  const x = localDb.prepare("SELECT * FROM cit_files WHERE is_uploaded = 0");
   x.each(function (err, row) {
     syncToGlobalDb(row.file_name, row.json_data, localDb);
   }, function (err, count) {
@@ -269,7 +269,7 @@ async function syncFiles(localDb) {
 }
 
 async function syncToGlobalDb(filename, jsondata, localDb) {
-  let data = JSON.parse(jsondata);
+  const data = JSON.parse(jsondata);
 
   try {
     await axios.post('https://api.mariostrikers.gg/citrus/uploadStats', data);
@@ -280,34 +280,43 @@ async function syncToGlobalDb(filename, jsondata, localDb) {
 }
 
 async function createFilesDB() {
-  var settingsJSON = readSettingsFile();
-  var dbname = settingsJSON['pathToReplays'] + '\\citrus.db';
+  const settingsJSON = readSettingsFile();
+  const dbname = settingsJSON['pathToReplays'] + '\\citrus.db';
   console.log('hello!');
-  var db = new sqlite3.Database(dbname, sqlite3.OPEN_READWRITE, (err) => {
-    if (err && err.code == "SQLITE_CANTOPEN") {
-      createDatabase(runQueriesAndSync);
-      return;
-    } else if (err) {
-      console.log("Getting error " + err);
-      exit(1);
-    }
-  });
 
-  let fileList = await getCitrusFilesNames(settingsJSON['pathToReplays'], '.cit');
-  await runQueriesAndSync(db, fileList);
+  await new Promise((resolve, reject) => {
+    const db = new sqlite3.Database(dbname, sqlite3.OPEN_READWRITE, (err) => {
+      if (err && err.code === "SQLITE_CANTOPEN") {
+        createDatabase(db, resolve);
+        return;
+      } else if (err) {
+        console.log("Getting error " + err);
+        reject(err);
+      }
+      resolve(db);
+    });
+  })
+    .then(async (db) => {
+      const fileList = await getCitrusFilesNames(settingsJSON['pathToReplays'], '.cit');
+      await runQueriesAndSync(db, fileList, settingsJSON['pathToReplays']);
+    })
+    .catch((err) => {
+      console.log('Error: ' + err);
+      //exit(1);
+    });
 }
 
-function createDatabase(callback) {
-  var settingsJSON = readSettingsFile();
-  var dbname = settingsJSON['pathToReplays'] + '\\citrus.db';
-  var newdb = new sqlite3.Database(dbname, (err) => {
+function createDatabase(db, callback) {
+  const settingsJSON = readSettingsFile();
+  const dbname = settingsJSON['pathToReplays'] + '\\citrus.db';
+  const newdb = new sqlite3.Database(dbname, (err) => {
     if (err) {
       console.log("Getting error " + err);
       exit(1);
     }
     createTables(newdb);
     if (typeof callback === 'function') {
-      callback(newdb); // Call the callback function once the database is created
+      callback(); // Call the callback function once the database is created
     }
   });
 }
@@ -323,16 +332,15 @@ function createTables(newdb) {
   });
 }
 
-async function runQueriesAndSync(db, fileList) {
-  await runQueries(db, fileList);
+async function runQueriesAndSync(db, fileList, replayPath) {
+  await runQueries(db, fileList, replayPath);
   syncFiles(db);
 }
 
-async function runQueries(db, fileList) {
-  var settingsJSON = readSettingsFile();
+async function runQueries(db, fileList, replayPath) {
   let i = 0;
   while (i < fileList.length) {
-    await runQuery(db, settingsJSON['pathToReplays'], fileList[i]);
+    await runQuery(db, replayPath, fileList[i]);
     i++;
   };
   console.log('Queries executed.');
