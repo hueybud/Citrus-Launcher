@@ -339,7 +339,9 @@ async function runQueriesAndSync(db, fileList, replayPath) {
 
 async function runQueries(db, fileList, replayPath) {
   let i = 0;
+  console.log(fileList.length);
   while (i < fileList.length) {
+    console.log(fileList[i]);
     await runQuery(db, replayPath, fileList[i]);
     i++;
   };
@@ -353,7 +355,7 @@ async function runQuery(db, replayPath, filename) {
       [filename]
     );
 
-    if (!row || row.is_uploaded === 0) {
+    if (typeof row.is_uploaded === 'undefined' || row.is_uploaded === 0) {
       let x = [];
       await getCitrusFileJSON(replayPath, filename, x, "false", "true");
       await db.run(
@@ -365,6 +367,7 @@ async function runQuery(db, replayPath, filename) {
     console.log("runQuery: " + err);
   }
 }
+
 
 
 async function createSettingsJSON() {
