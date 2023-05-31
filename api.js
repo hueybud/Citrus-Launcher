@@ -275,7 +275,7 @@ async function syncToGlobalDb(filename, jsondata, localDb) {
     await axios.post('https://api.mariostrikers.gg/citrus/uploadStats', data);
     await localDb.run("UPDATE cit_files SET is_uploaded = 1 WHERE file_name = ?", [filename]);
   } catch (err) {
-    console.log(err);
+    console.log("syncToGlobalDb: " + err);
   }
 }
 
@@ -287,7 +287,7 @@ async function createFilesDB() {
   await new Promise((resolve, reject) => {
     const db = new sqlite3.Database(dbname, sqlite3.OPEN_READWRITE, (err) => {
       if (err && err.code === "SQLITE_CANTOPEN") {
-        createDatabase(db, resolve);
+        createDatabase(resolve);
         return;
       } else if (err) {
         console.log("Getting error " + err);
@@ -302,11 +302,11 @@ async function createFilesDB() {
     })
     .catch((err) => {
       console.log('Error: ' + err);
-      //exit(1);
+      exit(1);
     });
 }
 
-function createDatabase(db, callback) {
+function createDatabase(callback) {
   const settingsJSON = readSettingsFile();
   const dbname = settingsJSON['pathToReplays'] + '\\citrus.db';
   const newdb = new sqlite3.Database(dbname, (err) => {
@@ -316,7 +316,7 @@ function createDatabase(db, callback) {
     }
     createTables(newdb);
     if (typeof callback === 'function') {
-      callback(); // Call the callback function once the database is created
+      callback(newdb); // Pass the newdb instance as an argument to the callback
     }
   });
 }
@@ -349,7 +349,11 @@ async function runQueries(db, fileList, replayPath) {
 async function runQuery(db, replayPath, filename) {
   let x = [];
   await getCitrusFileJSON(replayPath, filename, x, "false", "true");
-  await db.run("INSERT OR IGNORE INTO cit_files (file_name, is_uploaded, json_data) VALUES (?, ?, ?)", [filename, 0, x[0]]);
+  try {
+    await db.run("INSERT OR IGNORE INTO cit_files (file_name, is_uploaded, json_data) VALUES (?, ?, ?)", [filename, 0, x[0]]);
+  } catch (err) {
+    console.log("runQuery: " + err);
+  }
 }
 
 
