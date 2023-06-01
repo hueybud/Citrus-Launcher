@@ -37,7 +37,7 @@ function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection, 
   var seenFiles = 0;
   let foundJson = false;
   let pathToCitrusFile;
-  console.log(onFileClick)
+  console.log("onFileClick:" + onFileClick)
   if (onFileClick == "true") {
     // user is using a CIT file as a command line arg
     // could be coming from anywhere so read in where it's coming from
@@ -339,9 +339,7 @@ async function runQueriesAndSync(db, fileList, replayPath) {
 
 async function runQueries(db, fileList, replayPath) {
   let i = 0;
-  console.log(fileList.length);
   while (i < fileList.length) {
-    console.log(fileList[i]);
     await runQuery(db, replayPath, fileList[i]);
     i++;
   };
@@ -350,24 +348,33 @@ async function runQueries(db, fileList, replayPath) {
 
 async function runQuery(db, replayPath, filename) {
   try {
-    const row = await db.get(
-      "SELECT is_uploaded FROM cit_files WHERE file_name = ?",
-      [filename]
-    );
-
-    if (typeof row.is_uploaded === 'undefined' || row.is_uploaded === 0) {
-      let x = [];
-      await getCitrusFileJSON(replayPath, filename, x, "false", "true");
-      await db.run(
-        "INSERT OR IGNORE INTO cit_files (file_name, is_uploaded, json_data) VALUES (?, ?, ?)",
-        [filename, 0, x[0]]
+    const row = await new Promise((resolve, reject) => {
+      db.get(
+        "SELECT is_uploaded FROM cit_files WHERE file_name = '" + filename + "'",
+        async function (err, row) {
+          if (err) {
+            console.log('error getting uploaded cit file ' + err);
+            reject(err);
+          } else {
+            if (!row || row.is_uploaded === 0) {
+              let x = [];
+              await getCitrusFileJSON(replayPath, filename, x, "false", "true");
+              await db.run(
+                "INSERT OR IGNORE INTO cit_files (file_name, is_uploaded, json_data) VALUES (?, ?, ?)",
+                [filename, 0, x[0]]
+              );
+            }
+            resolve(row);
+          }
+        }
       );
-    }
+    });
+
+    // Continue with the rest of your code if needed
   } catch (err) {
     console.log("runQuery: " + err);
   }
 }
-
 
 
 async function createSettingsJSON() {
