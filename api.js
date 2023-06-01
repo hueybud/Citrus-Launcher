@@ -258,17 +258,17 @@ function readSettingsFile() {
   }
 }
 
-async function syncFiles(localDb) {
+async function syncCitDataToMssql(localDb) {
   // get list of files in the database with is_uploaded = 0
   const x = localDb.prepare("SELECT * FROM cit_files WHERE is_uploaded = 0");
   x.each(function (err, row) {
-    syncToGlobalDb(row.file_name, row.json_data, localDb);
+    uploadJsonToMssql(row.file_name, row.json_data, localDb);
   }, function (err, count) {
     x.finalize();
   });
 }
 
-async function syncToGlobalDb(filename, jsondata, localDb) {
+async function uploadJsonToMssql(filename, jsondata, localDb) {
   const data = JSON.parse(jsondata);
 
   try {
@@ -279,7 +279,7 @@ async function syncToGlobalDb(filename, jsondata, localDb) {
   }
 }
 
-async function createFilesDB() {
+async function uploadCitrusStats() {
   const settingsJSON = readSettingsFile();
   const dbname = settingsJSON['pathToReplays'] + '\\citrus.db';
   console.log('hello!');
@@ -314,14 +314,14 @@ function createDatabase(callback) {
       console.log("Getting error " + err);
       exit(1);
     }
-    createTables(newdb);
+    createTable(newdb);
     if (typeof callback === 'function') {
       callback(newdb); // Pass the newdb instance as an argument to the callback
     }
   });
 }
 
-function createTables(newdb) {
+function createTable(newdb) {
   newdb.exec(`
     CREATE TABLE IF NOT EXISTS cit_files (
       file_name TEXT PRIMARY KEY NOT NULL,
@@ -333,20 +333,20 @@ function createTables(newdb) {
 }
 
 async function runQueriesAndSync(db, fileList, replayPath) {
-  await runQueries(db, fileList, replayPath);
-  syncFiles(db);
+  await dumpCitFilesToSqlite(db, fileList, replayPath);
+  syncCitDataToMssql(db);
 }
 
-async function runQueries(db, fileList, replayPath) {
+async function dumpCitFilesToSqlite(db, fileList, replayPath) {
   let i = 0;
   while (i < fileList.length) {
-    await runQuery(db, replayPath, fileList[i]);
+    await insertJsonToSqliteWhereNotExists(db, replayPath, fileList[i]);
     i++;
   };
   console.log('Queries executed.');
 }
 
-async function runQuery(db, replayPath, filename) {
+async function insertJsonToSqliteWhereNotExists(db, replayPath, filename) {
   try {
     const row = await new Promise((resolve, reject) => {
       db.get(
@@ -356,7 +356,7 @@ async function runQuery(db, replayPath, filename) {
             console.log('error getting uploaded cit file ' + err);
             reject(err);
           } else {
-            if (!row || row.is_uploaded === 0) {
+            if (!row) {
               let x = [];
               await getCitrusFileJSON(replayPath, filename, x, "false", "true");
               await db.run(
@@ -411,8 +411,8 @@ module.exports.startPlayback = startPlayback;
 module.exports.getMD5ISO = getMD5ISO;
 module.exports.readSettingsFile = readSettingsFile;
 module.exports.createSettingsJSON = createSettingsJSON;
-module.exports.createFilesDB = createFilesDB;
-module.exports.syncFiles = syncFiles;
+module.exports.uploadCitrusStats = uploadCitrusStats;
+module.exports.syncFiles = syncCitDataToMssql;
 
 var mockedCollectionJSON = [
   {

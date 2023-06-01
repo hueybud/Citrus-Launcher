@@ -12,7 +12,7 @@ const { autoUpdater } = require("electron-updater");
 const log = require("electron-log")
 const setProcessArgs = require("./processWrapper").setProcessArgs;
 const createSettingsJSON = require("./api").createSettingsJSON;
-const createFilesDB = require("./api").createFilesDB;
+const createFilesDB = require("./api").uploadCitrusStats;
 var mainWindow;
 
 console.log(process.argv);
