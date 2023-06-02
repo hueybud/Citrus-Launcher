@@ -281,8 +281,11 @@ async function uploadJsonToMssql(filename, jsondata, localDb) {
 
 async function uploadCitrusStats() {
   const settingsJSON = readSettingsFile();
-  const dbname = settingsJSON['pathToReplays'] + '\\citrus.db';
-  console.log('hello!');
+  if (!settingsJSON['pathToReplays']) {
+    console.log("no replays path!");
+    return;
+  }
+  const dbname = path.dirname(getSettingsPath()) + '\\citrus.db';
 
   await new Promise((resolve, reject) => {
     const db = new sqlite3.Database(dbname, sqlite3.OPEN_READWRITE, (err) => {
@@ -307,8 +310,7 @@ async function uploadCitrusStats() {
 }
 
 function createDatabase(callback) {
-  const settingsJSON = readSettingsFile();
-  const dbname = settingsJSON['pathToReplays'] + '\\citrus.db';
+  const dbname = path.dirname(getSettingsPath()) + '\\citrus.db';
   const newdb = new sqlite3.Database(dbname, (err) => {
     if (err) {
       console.log("Getting error " + err);
