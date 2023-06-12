@@ -8,7 +8,7 @@ The application can be downloaded from the [Releases](https://github.com/hueybud
 
 # Development
 
-Developers can run the application by cloning the package and running `npm start`.
+Developers can run the application by cloning the package, installing the dependencies via `npm install`, and running `npm start`.
 
 # Usage
 
