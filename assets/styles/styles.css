@@ -85,6 +85,10 @@ body {
     cursor: pointer;
 }
 
+.progressCheckMark{
+    color: white;
+}
+
 .iconsContainerOuter{
     position: relative;
     /*padding-left: 40%;*/
@@ -93,10 +97,6 @@ body {
 .fileName {
     float: right;
     /*margin-right: 40px;*/
-}
-
-.navbar {
-    background: #161B36
 }
 
 #refreshIcon {
@@ -249,4 +249,8 @@ dl, ol, ul {
 
 .shotTypeCardOverrideColor {
     color: black !important
+}
+
+#dolphinNavLogo {
+    cursor: pointer;
 }

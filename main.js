@@ -1,7 +1,7 @@
 // main.js
 
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, dialog } = require('electron')
+const { app, BrowserWindow, dialog, ipcMain } = require('electron')
 const path = require('path')
 const os = require('os');
 const expressApp = require('./server');
@@ -11,11 +11,49 @@ const { default: axios } = require('axios');
 const { autoUpdater } = require("electron-updater");
 const log = require("electron-log")
 const setProcessArgs = require("./processWrapper").setProcessArgs;
+const setUserDataPath = require("./processWrapper").setUserDataPath;
 const createSettingsJSON = require("./api").createSettingsJSON;
+const createErrorsJSON = require("./api").createErrorsJSON;
+const installDolphin = require("./api").installDolphin;
+const openDolphin = require("./api").openDolphin;
 var mainWindow;
 
 console.log(process.argv);
 setProcessArgs(process.argv);
+setUserDataPath(app.getPath("userData"))
+console.log(path.join(app.getAppPath(), "preload.js"))
+
+ipcMain.handle("showDialog", async (event, ...args) => {
+  console.log(`Dialog main: ${JSON.stringify(args)}`)
+  if (args[0].dialogType == "general") {
+    // add any callbacks here
+    // every showMessageBox should have an object like this even if we don't provide a callback
+    /**
+     * {
+          dialogType: "general",
+          options: generalOptions,
+          callback: {
+            (optional) 0: name of function that corresponds to callbackMap
+        }
+    */
+    const callbackMap = {
+      "openDolphin": openDolphin
+    };
+    const result = await dialog.showMessageBox(null, args[0].options);
+    console.log(result.response);
+    if (result.response == 0) {
+      // the original use case for this was to pass openDolphin to the 0 index (yes, open dolphin)
+      if (args[0].callback['0']) {
+        const callbackValue = args[0].callback['0'];
+        console.log(`We are going to execute: ${callbackValue}`)
+        callbackMap[callbackValue].call(this);
+      }
+    }
+  }
+  if (args[0].dialogType == "error") {
+    dialog.showErrorBox(args[0].options.title, args[0].options.message);
+  }
+})
 
 class AppUpdater {
   constructor() {
@@ -47,16 +85,21 @@ class AppUpdater {
 
 const createWindow = () => {
   // Create the browser window.
+  console.log(path.join(app.getAppPath(), 'preload.js'))
   mainWindow = new BrowserWindow({
     minWidth: 1100,
     minHeight: 700,
     show: false,
     icon: path.join(__dirname, 'assets', 'images', 'citrus_32x32.png'),
-    title: `Citrus Launcher ${app.getVersion()}`
+    title: `Citrus Launcher ${app.getVersion()}`,
+    webPreferences: {
+      contextIsolation: true,
+      preload: path.join(app.getAppPath(), "preload.js")
+  }
   })
 
   if (process.argv[3] == '--dev') {
-    if (process.argv[3] == '--dev' && process.argv[2] == 'wesArg') {
+    if (process.argv[2] == 'wesArg') {
       mainWindow.loadFile("matchSummary.html", {query: {fileName: 'Game_April_27_2023_23_10_53.cit', autoStartReplay: true, onFileClick: false}})
     } else {
       // and load the index.html of the app.
@@ -96,8 +139,10 @@ app.whenReady().then(async () => {
     app.quit();
   } else {
     console.log(`version: ${app.getVersion()}`)
-    await createSettingsJSON()
-    createWindow()
+    await createSettingsJSON();
+    await createErrorsJSON();
+    createWindow();
+    installDolphin();
 
   
     app.on('activate', () => {
@@ -173,5 +218,10 @@ function promptUpdate(localVersion, remoteVersion) {
       exec(ourCommand)
     }
   })
-  
 }
+  
+function doDialog() {
+  dialog.showErrorBox(`Lol you're dumb`)
+}
+
+module.exports.doDialog = doDialog;

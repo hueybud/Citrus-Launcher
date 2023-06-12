@@ -12,6 +12,7 @@ var globalCitrusCollection;
 // initialize the row and page filters to 25 and 1 respectively
 var globalRowParam = 25;
 var globalPageParam = 1;
+var citrusDolphinUpdateStats = {status: "INACTIVE", currentBytes: 0, totalBytes: 0}
 
 function startServer() {
     return new Promise(function(resolve, reject){
@@ -44,7 +45,7 @@ app.get('/test', function(req, res){
 app.post('/collectCitrusNames', async function(req, res){
     // first value in returned array is telling the client if we can use the same htmlCollectionArr as last time
     if (req.body.refresh == true || (globalRowParam != req.body.rowParam) || (globalPageParam != req.body.pageParam)) {
-        var settingsJSON = api.readSettingsFile();
+        var settingsJSON = await api.readSettingsFile();
         var citrusNamesList = await api.collectCitrusNames(settingsJSON['pathToReplays'], '.cit')
         globalCitrusNames = citrusNamesList;
         globalRowParam = req.body.rowParam;
@@ -52,7 +53,7 @@ app.post('/collectCitrusNames', async function(req, res){
         res.send([false, globalCitrusNames]);
     } else {
         if (!globalCitrusNames) {
-            var settingsJSON = api.readSettingsFile();
+            var settingsJSON = await api.readSettingsFile();
             var citrusNamesList = await api.collectCitrusNames(settingsJSON['pathToReplays'], '.cit')
             globalCitrusNames = citrusNamesList;
             globalRowParam = req.body.rowParam;
@@ -87,12 +88,12 @@ app.post('/startPlayback', async function(req,res){
     var result = await api.startPlayback(req.body.fileName, req.body.onFileClick);
     res.send(result);
 })
-app.get('/getSettingsJSON', function(req, res){
-    var settingsJSON = api.readSettingsFile();
+app.get('/getSettingsJSON', async function(req, res){
+    var settingsJSON = await api.readSettingsFile();
     res.send(settingsJSON);
 })
-app.post('/updateReplaysFolder', function(req, res){
-    var settingsJSON = api.readSettingsFile();
+app.post('/updateReplaysFolder', async function(req, res){
+    var settingsJSON = await api.readSettingsFile();
     console.log(req.body);
     var updatedReplayFolder = req.body.replaysPath;
     console.log(updatedReplayFolder)
@@ -106,8 +107,8 @@ app.post('/updateReplaysFolder', function(req, res){
     //globalCitrusCollection = undefined;
     res.end();
 })
-app.post('/updateISOFile', function(req, res){
-    var settingsJSON = api.readSettingsFile();
+app.post('/updateISOFile', async function(req, res){
+    var settingsJSON = await api.readSettingsFile();
     var updatedISOFile = req.body.isoFile;
     console.log(updatedISOFile)
     settingsJSON['pathToISO'] = updatedISOFile;
@@ -127,8 +128,8 @@ app.post('/updateISOFile', function(req, res){
     });
     res.end();
 })
-app.post('/updateDolphinFile', function(req, res){
-    var settingsJSON = api.readSettingsFile();
+app.post('/updateDolphinFile', async function(req, res){
+    var settingsJSON = await api.readSettingsFile();
     console.log(req.body);
     var updatedDolphinFile = req.body.dolphinFile;
     console.log(updatedDolphinFile)
@@ -141,11 +142,29 @@ app.post('/updateDolphinFile', function(req, res){
     res.end();
 })
 app.get('/getMatchSummary', async function(req, res){
-    console.log("match summary request: " + JSON.stringify(req.query))
-    var settingsJSON = api.readSettingsFile();
+    var settingsJSON = await api.readSettingsFile();
     var singularJSONCollection = [];
     await api.getCitrusFileJSON(settingsJSON['pathToReplays'], req.query.fileName, singularJSONCollection, req.query.onFileClick);
     res.send(singularJSONCollection[0]);
 })
+
+app.post('/setCitrusDolphinUpdateStats', function(req, res){
+    citrusDolphinUpdateStats = {
+        status: req.body.status,
+        currentBytes: req.body.currentBytes ?? citrusDolphinUpdateStats.currentBytes,
+        totalBytes: req.body.totalBytes ?? citrusDolphinUpdateStats.totalBytes,
+        errorMessage: req.body.errorMessage ?? "Error"
+    }
+})
+
+app.get('/getDolphinUpdateStats', function(req, res){
+    res.send(citrusDolphinUpdateStats);
+});
+
+app.get('/openDolphin', async function(req, res){
+    const result = await api.openDolphin();
+    res.send(result);
+})
+
 module.exports.startServer = startServer;
 module.exports.killServer = killServer;

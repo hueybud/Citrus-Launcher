@@ -7,7 +7,12 @@ const os = require('os');
 const { exec } = require('child_process');
 const { createHash } = require('crypto');
 const { Stream } = require('stream');
-const { isDev, getProcessArgs, getSettingsPath } = require("./processWrapper");
+const { isDev, getDolphinFolderPath, getProcessArgs, getSettingsPath, getErrorsPath } = require("./processWrapper");
+const wgetDownload = require("wget-improved");
+const fsExtra = require("fs-extra");
+const { default: axios } = require('axios');
+const AsyncStreamZip = require("node-stream-zip").async;
+const createDesktopShortcut = require('create-desktop-shortcuts');
 
 async function getCitrusFilesNames(citrusReplaysPath, extension) {
   let listOfCitrusFiles;
@@ -35,7 +40,6 @@ function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection, 
     var seenFiles = 0;
     let foundJson = false;
     let pathToCitrusFile;
-    console.log(onFileClick)
     if (onFileClick == "true") {
       // user is using a CIT file as a command line arg
       // could be coming from anywhere so read in where it's coming from
@@ -95,7 +99,7 @@ function startPlayback(fileName, onFileClick){
   // if onFileClick is true, fileName is a full file name. otherwise, it's relative
 
   return new Promise(async function(resolve, reject){
-    var settingsJSON = readSettingsFile();
+    var settingsJSON = await readSettingsFile();
     // check for blank fields
     for (elem in settingsJSON) {
       if (settingsJSON[elem] == "" && elem != "isoHash") {
@@ -104,11 +108,6 @@ function startPlayback(fileName, onFileClick){
         return;
       }
     }
-    // handle dank case where hash doesn't get set from dolphin and gets set to 00s
-    if (settingsJSON["isoHash"] == "0000000000000000") {
-
-    }
-
     // comapre hashes now
 
     // get hash from DTM file
@@ -125,10 +124,20 @@ function startPlayback(fileName, onFileClick){
     if ((dtmHash != isoHash) && (dtmHash != "0000000000000000")) {
       // mistmatched hashes which could mess with playback
       var errorMessage = `
-      Mismatched hashes between your replay file ISO and your selected playback ISO.
-      Your replay file was played on an ISO with a hash of ${dtmHash} <b>(${hashToISOName(dtmHash)})</b> and your playback ISO has a hash
-      of ${isoHash} <b>(${hashToISOName(isoHash)})</b>. <p class="mt-2">Please select the appropriate ISO for this replay 
-      via the Settings tab. This page can be accessed by clicking the gear icon in the top right corner.</p>
+      <p>Mismatched hashes between the match's replay file ISO and your selected playback ISO.</p>
+      <p class="mt-2">Please set the Playback ISO in the Settings tab to the <b>${hashToISOName(dtmHash)}</b> in order to play this replay.
+      This page can be accessed by clicking the gear icon in the top right corner.</p>
+      <button class="btn btn-primary" type="button"data-bs-toggle="collapse" data-bs-target="#isoCollapse" aria-expanded="false" aria-controls="isoCollapse">
+      Info for nerds
+      </button>
+      <div class="collapse" id="isoCollapse">
+        <p class="mt-2">
+        <span>The selected match was played with an ISO that has a hash of <b>${dtmHash}</b> : <em>${hashToISOName(dtmHash)}</em></span>
+        </p>
+        <p class="mt-2">
+        <span>The current Playback ISO in Settings has a hash of <b>${isoHash}</b> : <em>${hashToISOName(isoHash)}</em></span>
+        </p>
+      </div>
       `
       resolve(errorMessage);
       return;
@@ -234,21 +243,46 @@ function getMD5ISO(filePath) {
 function hashToISOName(hash) {
   switch (hash) {
     case "a8d8fcc0c15bfec539398be32b40a69d":
-      return "Vanilla Super Mario Strikers GCM"
+      return "Super Mario Strikers GCM"
     case "f34aae896bbbba8380282b722bb3a092":
       return "Citrus Build Super Mario Strikers ISO"
+    case "8788cfdf60258c975fcb8632eb295f58":
+      return "Super Mario Strikers ISO"
     default:
       return "Non-Documented ISO"
   }
 }
 
-function readSettingsFile() {
-  try {
-    return JSON.parse(fs.readFileSync(getSettingsPath()))
-  } catch (err) {
-    console.error("Error reading settings file");
-    throw new Error(err);
-  }
+async function readErrorsFile() {
+  return new Promise(async function(resolve, reject){
+    try {
+      resolve(JSON.parse(fs.readFileSync(getErrorsPath())))
+    } catch (err) {
+      console.error(`Error reading erros file: ${err}`);
+      if (err.code == "ENOENT") {
+        await createErrorsJSON();
+        resolve(JSON.parse(fs.readFileSync(getErrorsPath())))
+      } else {
+        throw new Error(err);
+      }
+    }
+  })
+}
+
+async function readSettingsFile() {
+  return new Promise(async function(resolve, reject){
+    try {
+      resolve(JSON.parse(fs.readFileSync(getSettingsPath()))) 
+    } catch (err) {
+      console.error(`Error reading settings file: ${err}`);
+      if (err.code == "ENOENT") {
+        await createErrorsJSON();
+        resolve(JSON.parse(fs.readFileSync(getSettingsPath()))) 
+      } else {
+        throw new Error(err);
+      }
+    }
+  })
 }
 
 async function createSettingsJSON() {
@@ -279,12 +313,218 @@ async function createSettingsJSON() {
   })
 }
 
+async function createErrorsJSON() {
+  const errorsPath = getErrorsPath();
+  return new Promise(function(resolve, reject){
+    fs.open(errorsPath,'r',function(err, fd){
+      if (err) {
+        var data = [];
+        fs.writeFile(errorsPath, JSON.stringify(data), function(err) {
+            if(err) {
+                console.log(err);
+                resolve("done")
+            }
+            console.log("The errors file was created");
+            resolve("done")
+        });
+      } else {
+        // in the future, let's overhaul this function to be responsible for creating and writing to it
+        // same with settings file, but don't wanna mess it up before big release
+        console.log("The errors file already exists");
+        resolve("done")
+      }
+    });
+  })
+}
+
+async function download(url, destinationFile) {
+  await fsExtra.ensureDir(path.dirname(destinationFile));
+
+  // slippi-launcher code
+  return new Promise((resolve, reject) => {
+    let totalBytes = 0;
+    const downloader = wgetDownload.download(url, destinationFile);
+    downloader.on("error", (err) => {
+      fs.unlink(destinationFile, () => {
+        reject(err);
+      });
+    });
+    downloader.on("start", (fileSize) => {
+      if (fileSize !== null) {
+        totalBytes = fileSize;
+      }
+    });
+    downloader.on("end", () => {
+      resolve();
+    });
+    downloader.on("bytes", (transferredBytes) => {
+      // post that we are actively downloading to the server and the progress
+      axios.post('http://127.0.0.1:8082/setCitrusDolphinUpdateStats', {
+        status: "ACTIVE",
+        currentBytes: transferredBytes,
+        totalBytes: totalBytes
+      })
+      //console.log(`transferredBytes: ${transferredBytes}. totalBytes: ${totalBytes}`)
+    });
+  });
+}
+
+async function downloadDolphin() {
+  return new Promise(async function(resolve, reject){
+    const downloadURL = await getDolphinAsset();
+    // C:\Users\Brian\Documents\Citrus Launcher\dolphin\Citrus.Dolphin.0.1.6.2.zip
+    const destinationLocation = path.join(getDolphinFolderPath(), path.basename(downloadURL))
+    console.log(`Downloading Dolphin to ${destinationLocation}`);
+    await download(downloadURL, destinationLocation)
+    resolve(destinationLocation);
+  })
+}
+
+async function getDolphinAsset() {
+  return new Promise(function(resolve, reject){
+    axios.get('https://api.github.com/repos/hueybud/Project-Citrus/releases/latest').then(response => {
+      const assets = response.data['assets']
+      resolve(assets[0]["browser_download_url"])
+    }).catch(err => {
+      console.log(err)
+      reject("Failed to read remote version")
+    })
+  })
+}
+
+async function getLatestDolphinVersion() {
+  return new Promise(function(resolve, reject){
+    axios.get('https://api.github.com/repos/hueybud/Project-Citrus/releases/latest').then(response => {
+      resolve(response.data['tag_name'])
+    }).catch(err => {
+      console.log(err)
+      resolve("Failed to read remote version")
+    })
+  })
+}
+
+async function installDolphin() {
+  const versionPath = path.join(getDolphinFolderPath(), 'x64', 'version.txt');
+  let localDolphinVersion = "";
+  console.log(`Reading in version.txt at ${versionPath}`)
+  try {
+    localDolphinVersion = fs.readFileSync(versionPath);
+    console.log(`Local dolphin version: ${localDolphinVersion}`)
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      // version file doesn't exist
+      console.error("Dolphin version file doesn't exist")
+    } else {
+      console.error(err);
+    }
+  }
+
+  // check if returned version should be updated
+  const latestDolphinVersion = await getLatestDolphinVersion();
+  if (localDolphinVersion == latestDolphinVersion) {
+    console.log(`Local and Remote Dolphin versions are already up to date at version ${latestDolphinVersion}`)
+    return;
+  }
+
+  console.log(`Beginning to update to Citrus Dolphin ${latestDolphinVersion}`)
+
+  // delete current dolphin. download and install latest dolphin
+  console.log(`Deleting existing Dolphin folder`)
+  fs.rmSync(getDolphinFolderPath(), { recursive: true, force: true })
+  
+  try {
+    console.log(`Downloading latest Dolphin`)
+    const assetPath = await downloadDolphin();
+    // C:\Users\Brian\Documents\Citrus Launcher\dolphin\Citrus.Dolphin.0.1.6.2.zip
+    const zip = new AsyncStreamZip({ file: assetPath });
+  
+    console.log(`Extracting latest Dolphin`)
+    await zip.extract(null, getDolphinFolderPath());
+    await zip.close();
+
+    console.log(`Deleting downloaded zip file`)
+    fs.rmSync(assetPath, { recursive: true, force: true })
+
+    if (!isDev()) {
+      const dolphinExePath = path.join(getDolphinFolderPath(), 'x64', 'Citrus Dolphin.exe');
+      console.log(`Creating Desktop shortcut`)
+      const prodVBSPath = path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'create-desktop-shortcuts', 'src', 'windows.vbs')
+      createDesktopShortcut({
+        windows: {
+          filePath: dolphinExePath,
+          VBScriptPath: prodVBSPath
+        }
+      });
+
+      console.log(`Update settings.json with Dolphin exe`)
+      const settingsJSON = await readSettingsFile();
+      settingsJSON['pathToDolphin'] = dolphinExePath;
+      fs.writeFileSync(getSettingsPath(), JSON.stringify(settingsJSON))
+    }
+
+    // post that we are done to the server
+    axios.post('http://127.0.0.1:8082/setCitrusDolphinUpdateStats', {
+      status: "DONE"
+    })
+
+    console.log("Done updating Dolphin")
+
+  } catch (err) {
+    // post that we encountered an error to the server
+    axios.post('http://127.0.0.1:8082/setCitrusDolphinUpdateStats', {
+      status: "ERROR",
+      errorMessage: JSON.stringify(err)
+    })
+    console.log(`Error updating Dolphin: ${JSON.stringify(err)}`);
+    const errorsJSON = await readErrorsFile();
+    errorsJSON.push({
+      time: new Date().toLocaleString(),
+      error: err
+    })
+    fs.writeFileSync(getErrorsPath(), JSON.stringify(errorsJSON));
+  }
+}
+
+async function openDolphin() {
+  const settingsJSON = await readSettingsFile();
+  const rawPathToDolphin = settingsJSON['pathToDolphin']
+  console.log(`Looking to open dolphin at: ${rawPathToDolphin}`)
+  return new Promise(function(resolve, reject){
+    // check to see if the dolphin.exe they provided exists (people delete folders)
+    if (!fs.existsSync(rawPathToDolphin)) {
+      console.log("dolphin path does not exist")
+      resolve({
+        errorMessage: 'dolphin path does not exist',
+        pathToDolphin: rawPathToDolphin
+      })
+      return;
+    }
+
+    var pathToDolphin = '"' + rawPathToDolphin + '"';
+    console.log(`Formatted Dolphin path for opening is: ${pathToDolphin}`);
+    exec(pathToDolphin, [], (error, stdout, stderr) => {
+      if (error) {
+        console.log(error);
+        resolve({
+          errorMessage: error,
+          pathToDolphin: rawPathToDolphin
+        })
+      }
+      console.log(stdout);
+    })
+    resolve("Success")
+  })
+}
+
 module.exports.collectCitrusNames = getCitrusFilesNames;
 module.exports.getCitrusFileJSON = getCitrusFileJSON;
 module.exports.startPlayback = startPlayback;
 module.exports.getMD5ISO = getMD5ISO;
 module.exports.readSettingsFile = readSettingsFile;
 module.exports.createSettingsJSON = createSettingsJSON;
+module.exports.createErrorsJSON = createErrorsJSON;
+module.exports.installDolphin = installDolphin;
+module.exports.openDolphin = openDolphin;
 
 var mockedCollectionJSON = [
     {
