@@ -13,6 +13,9 @@ const fsExtra = require("fs-extra");
 const { default: axios } = require('axios');
 const AsyncStreamZip = require("node-stream-zip").async;
 const createDesktopShortcut = require('create-desktop-shortcuts');
+// real api: "https://api.github.com/repos/hueybud/Project-Citrus/releases/latest"
+// fake api: "https://api.github.com/repos/hueybud/Fake_Project_Citrus/releases/latest"
+const projectCitrusGitHubAPI = "https://api.github.com/repos/hueybud/Project-Citrus/releases/latest"
 
 async function getCitrusFilesNames(citrusReplaysPath, extension) {
   let listOfCitrusFiles;
@@ -41,9 +44,13 @@ function getCitrusFileJSON(citrusReplaysPath, citrusFile, citrusJSONCollection, 
     let foundJson = false;
     let pathToCitrusFile;
     if (onFileClick == "true") {
+      console.log(`on file click is true`);
+      console.log(`citrusFile param is: ${citrusFile}`)
+      console.log(`process args are: ${getProcessArgs()}`)
       // user is using a CIT file as a command line arg
       // could be coming from anywhere so read in where it's coming from
-      pathToCitrusFile = getProcessArgs()[1];
+      pathToCitrusFile = path.normalize(citrusFile);
+      console.log(`lookup path is: ${pathToCitrusFile}`)
     } else {
       pathToCitrusFile = path.join(citrusReplaysPath, citrusFile);
     }
@@ -382,7 +389,7 @@ async function downloadDolphin() {
 
 async function getDolphinAsset() {
   return new Promise(function(resolve, reject){
-    axios.get('https://api.github.com/repos/hueybud/Project-Citrus/releases/latest').then(response => {
+    axios.get(projectCitrusGitHubAPI).then(response => {
       const assets = response.data['assets']
       resolve(assets[0]["browser_download_url"])
     }).catch(err => {
@@ -394,7 +401,7 @@ async function getDolphinAsset() {
 
 async function getLatestDolphinVersion() {
   return new Promise(function(resolve, reject){
-    axios.get('https://api.github.com/repos/hueybud/Project-Citrus/releases/latest').then(response => {
+    axios.get(projectCitrusGitHubAPI).then(response => {
       resolve(response.data['tag_name'])
     }).catch(err => {
       console.log(err)
@@ -427,12 +434,12 @@ async function installDolphin() {
   }
 
   console.log(`Beginning to update to Citrus Dolphin ${latestDolphinVersion}`)
-
-  // delete current dolphin. download and install latest dolphin
-  console.log(`Deleting existing Dolphin folder`)
-  fs.rmSync(getDolphinFolderPath(), { recursive: true, force: true })
   
   try {
+    // delete current dolphin. download and install latest dolphin
+    console.log(`Deleting existing Dolphin folder`)
+    fs.rmSync(getDolphinFolderPath(), { recursive: true, force: true })
+
     console.log(`Downloading latest Dolphin`)
     const assetPath = await downloadDolphin();
     // C:\Users\Brian\Documents\Citrus Launcher\dolphin\Citrus.Dolphin.0.1.6.2.zip

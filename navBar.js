@@ -3,7 +3,7 @@ var navBarIndex = `
     <div class="container-fluid">
     <a class="navbar-brand">
     <img src='./assets/images/citrus logo.png' width='64px' height='64px'>
-    <img src='./assets/images/dolphin.ico' id='dolphinNavLogo' width='64px' height='64px' title='Open Citrus Dolphin'>
+    <img src='./assets/images/dolphin icon.png' id='dolphinNavLogo' width='64px' height='64px' title='Open Citrus Dolphin'>
     </a>
     <div id="dolphinUpdateProgresContainer" class="w-75" style="display: none;">
         <h5 style="color: white" id="updatingCitrusDolphinHeader">Updating Citrus Dolphin ...</h5>
@@ -25,7 +25,7 @@ var navBar = `
     <div class="container-fluid">
     <a class="navbar-brand">
     <img src='./assets/images/citrus logo.png' width='64px' height='64px'>
-    <img src='./assets/images/dolphin.ico' id='dolphinNavLogo' width='64px' height='64px' title='Open Citrus Dolphin'>
+    <img src='./assets/images/dolphin icon.png' id='dolphinNavLogo' width='64px' height='64px' title='Open Citrus Dolphin'>
     </a>
     <div id="dolphinUpdateProgresContainer" class="w-75" style="display: none;">
         <h5 style="color: white" id="updatingCitrusDolphinHeader">Updating Citrus Dolphin ...</h5>
@@ -41,6 +41,8 @@ var navBar = `
     </nav>
 `
 $(document).ready(function(){
+    var haveShownSuccessfullUpdateDialog = false;
+    var haveShownErrorUpdateDialog = false;
     var currentPage = window.location.href.split('/');
     currentPage = currentPage[currentPage.length - 1];
     if (currentPage == "index.html") {
@@ -108,10 +110,14 @@ $(document).ready(function(){
                 title: "Error updating Citrus Dolphin",
                 message: `We were unable to update Citrus Dolphin. Please make sure Citrus Dolphin is closed while it is being updated.\n\nIf Citrus Dolphin was open during the update, please close it and then restart Citrus Launcher.\n\nThe error code is ${errorMessage}.`
             }
-            await window.api.showDialog({
-                dialogType: "error",
-                options: errorOptions
-            })
+
+            if (!haveShownErrorUpdateDialog) {
+                await window.api.showDialog({
+                    dialogType: "error",
+                    options: errorOptions
+                })
+                haveShownErrorUpdateDialog = true;
+            }
         }
         if (stats.status == "DONE") {
             const percent = 100;
@@ -130,13 +136,17 @@ $(document).ready(function(){
                 defaultId: 0
             }
 
-            await window.api.showDialog({
-                dialogType: "general",
-                options: generalOptions,
-                callback: {
-                    0: "openDolphin"
-                }
-            })
+            // this is beyond smelly but technically, since we only try to update once per session, only call the dialog if we haven't tried before
+            if (!haveShownSuccessfullUpdateDialog) {
+                await window.api.showDialog({
+                    dialogType: "general",
+                    options: generalOptions,
+                    callback: {
+                        0: "openDolphin"
+                    }
+                })
+                haveShownSuccessfullUpdateDialog = true;
+            }
         }
     }
 
@@ -162,14 +172,14 @@ $(document).ready(function(){
         }
         while ((updateStatus != "DONE" && updateStatus != "ERROR") && pollActive) {
             axios.get('http://127.0.0.1:8082/getDolphinUpdateStats')
-            .then(stats => {
+            .then(async (stats) => {
                 console.log(stats.data)
                 updateDolphinProgessBar(stats.data)
                 updateStatus = stats.data.status;
             })
             .catch(statsErr => {
                 console.log(statsErr)
-            });
+            })
             await timer(100);
         }
     }

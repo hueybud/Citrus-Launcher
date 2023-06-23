@@ -129,29 +129,43 @@ const createWindow = () => {
   })
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(async () => {
-  let serverResult = await expressApp.startServer();
-  if (serverResult != "server created") {
-    dialog.showErrorBox("Port Error", "Error when trying to listen to port 8082. Please close any applications using it. Citrus Launcher will close after you accept this message.")
-    app.quit();
-  } else {
-    console.log(`version: ${app.getVersion()}`)
-    await createSettingsJSON();
-    await createErrorsJSON();
-    createWindow();
-    installDolphin();
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Print out data received from the second instance.
+    console.log(commandLine)
 
-  
-    app.on('activate', () => {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
-      if (BrowserWindow.getAllWindows().length === 0) createWindow()
-    })
-  }
-})
+    // Someone tried to run a second instance, we should focus our window.
+    if (mainWindow) {
+      if (fs.existsSync(commandLine[2]) && path.extname(commandLine[2]) == ".cit") {
+        mainWindow.loadFile("matchSummary.html", {query: {fileName: commandLine[2], autoStartReplay: true, onFileClick: true}})
+      }
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore()
+      }
+      mainWindow.focus()
+    }
+  })
+  // This method will be called when Electron has finished
+  // initialization and is ready to create browser windows.
+  // Some APIs can only be used after this event occurs.
+  app.whenReady().then(async () => {
+    // try to start a server
+    let serverResult = await expressApp.startServer();
+    if (serverResult != "server created") {
+      dialog.showErrorBox("Port Error", "Error when trying to listen to port 8082. Please close any applications using it. Citrus Launcher will close after you accept this message.")
+      app.quit();
+    } else {
+      console.log(`version: ${app.getVersion()}`)
+      await createSettingsJSON();
+      await createErrorsJSON();
+      createWindow();
+      installDolphin();
+    }
+  })
+}
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
