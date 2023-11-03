@@ -5,6 +5,7 @@ const api = require('./api');
 const path = require('path');
 const fs = require('fs')
 const os = require('os');
+const { getUserConfigPath } = require('./processWrapper');
 const getSettingsPath = require("./processWrapper").getSettingsPath;
 var serverVar;
 var globalCitrusNames;
@@ -88,10 +89,12 @@ app.post('/startPlayback', async function(req,res){
     var result = await api.startPlayback(req.body.fileName, req.body.onFileClick);
     res.send(result);
 })
+
 app.get('/getSettingsJSON', async function(req, res){
     var settingsJSON = await api.readSettingsFile();
     res.send(settingsJSON);
 })
+
 app.post('/updateReplaysFolder', async function(req, res){
     var settingsJSON = await api.readSettingsFile();
     console.log(req.body);
@@ -107,6 +110,7 @@ app.post('/updateReplaysFolder', async function(req, res){
     //globalCitrusCollection = undefined;
     res.end();
 })
+
 app.post('/updateISOFile', async function(req, res){
     var settingsJSON = await api.readSettingsFile();
     var updatedISOFile = req.body.isoFile;
@@ -128,6 +132,7 @@ app.post('/updateISOFile', async function(req, res){
     });
     res.end();
 })
+
 app.post('/updateDolphinFile', async function(req, res){
     var settingsJSON = await api.readSettingsFile();
     console.log(req.body);
@@ -141,6 +146,40 @@ app.post('/updateDolphinFile', async function(req, res){
     });
     res.end();
 })
+
+app.post('/updateUserConfig', async function(req, res){
+    await api.createUserJSON();
+    // req.body.userConfig should be a JSON that looks like:
+    /*
+    {
+        discordId: 123,
+        jwt: 'ey...'
+        discordGlobalName: 'PoolBoi'
+    }
+    */
+    fs.writeFile(getUserConfigPath(), JSON.stringify(req.body.userConfig), function(err){
+        if (err) {
+            console.log(err)
+        }
+    });
+    console.log("Updated the user config file")
+    res.end();
+})
+
+app.get('/getCurrentUser', async function(req, res){
+    const {discordId, discordGlobalName, discordAvatar} = await api.readUserConfigFile();
+    res.send({discordId, discordGlobalName, discordAvatar});
+})
+
+// not implemented yet
+app.get('/logout', async function(req, res) {
+    // we need to reset the user json to empty
+    // so just delete it and remake it
+    fs.rmSync(getUserConfigPath());
+    await api.createUserJSON();
+
+})
+
 app.get('/getMatchSummary', async function(req, res){
     var settingsJSON = await api.readSettingsFile();
     var singularJSONCollection = [];

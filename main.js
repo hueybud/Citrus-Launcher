@@ -9,19 +9,21 @@ const fs = require('fs');
 const { exec } = require('child_process');
 const { default: axios } = require('axios');
 const { autoUpdater } = require("electron-updater");
-const log = require("electron-log")
+const log = require("electron-log");
+const { URLSearchParams } = require('url');
 const setProcessArgs = require("./processWrapper").setProcessArgs;
 const setUserDataPath = require("./processWrapper").setUserDataPath;
 const createSettingsJSON = require("./api").createSettingsJSON;
 const createErrorsJSON = require("./api").createErrorsJSON;
 const installDolphin = require("./api").installDolphin;
 const openDolphin = require("./api").openDolphin;
+const https = require('https');
+const { createUserJSON } = require('./api');
 var mainWindow;
 
 console.log(process.argv);
 setProcessArgs(process.argv);
 setUserDataPath(app.getPath("userData"))
-console.log(path.join(app.getAppPath(), "preload.js"))
 
 ipcMain.handle("showDialog", async (event, ...args) => {
   console.log(`Dialog main: ${JSON.stringify(args)}`)
@@ -55,6 +57,10 @@ ipcMain.handle("showDialog", async (event, ...args) => {
   }
 })
 
+ipcMain.handle("login", async () => {
+  authWindow();
+})
+
 class AppUpdater {
   constructor() {
     log.transports.file.level = "info";
@@ -83,6 +89,91 @@ class AppUpdater {
   }
 }
 
+function authWindow() {
+  var authWindow = new BrowserWindow({
+    width: 800, 
+    height: 600, 
+    show: false, 
+    'node-integration': false,
+    'web-security': false
+  });
+  // This is just an example url - follow the guide for whatever service you are using
+  const DISCORD_HOST = "https://discord.com";
+  const OAUTH_CLIENT_ID = "976164178203123732";
+  const OAUTH_CLIENT_SECRET = "6DI96hoqna2WjJhUpuzNY1rM9Vrz2tv4";
+  let redirection = DISCORD_HOST + "/api/oauth2/authorize?client_id=" + OAUTH_CLIENT_ID +
+  "&redirect_uri=" + "&response_type=code" +
+  "&scope=guilds.members.read%20identify%20guilds%20guilds.join";
+  authWindow.loadURL(redirection);
+  authWindow.show();
+  // 'will-navigate' is an event emitted when the window.location changes
+  // newUrl should contain the tokens you need
+  authWindow.webContents.on('will-navigate', async function (event, newUrl) {
+      console.log(newUrl);
+      const code = newUrl.split("?code=")[1];
+      console.log(code)
+      // More complex code to handle tokens goes here
+      const API_ENDPOINT = DISCORD_HOST + "/api/v10";
+      const baseUrl = "http://localhost:3001"
+      const data = {
+          'client_id': OAUTH_CLIENT_ID,
+          'client_secret': OAUTH_CLIENT_SECRET,
+          'grant_type': 'authorization_code',
+          'code': code,
+          'redirect_uri': baseUrl
+      };
+      const headers = {
+          headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+          }
+      };
+      let oAuthToken;
+      try {
+        const oAuthResult = await axios.post(`${API_ENDPOINT}/oauth2/token`, new URLSearchParams(data), headers)
+        oAuthToken = oAuthResult.data
+        console.log(oAuthToken)
+        // post to mariostrikers.gg server for them to validate us via bearer
+      } catch (err) {
+        console.log(err.code)
+        return;
+      }
+
+      let jwtRequest;
+      try {
+        // we should only disabled if we are doing this in dev cuz in reality the mariostrikers.gg endpoint is signed
+        jwtRequest = await axios.post(`https://localhost:3000/citrus/setupUser`, oAuthToken, {httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })})
+        console.log(`Received userId and JWT from server: ${JSON.stringify(jwtRequest.data)}`)
+      } catch (err) {
+        console.log(err.message)
+      }
+
+      try {
+        const userConfigData = {
+          userConfig: {
+            discordId: jwtRequest.data.discordId,
+            discordGlobalName: jwtRequest.data.discordGlobalName,
+            discordAvatar: jwtRequest.data.discordAvatar,
+            jwt: jwtRequest.data.jwt,
+          }
+        }
+        await axios.post(`http://localhost:8082/updateUserConfig`, userConfigData)
+      } catch (err) {
+        console.log(err)
+      } finally {
+        authWindow.close();
+      }
+      
+  });
+
+  authWindow.on('closed', function() {
+      authWindow = null;
+      console.log(`Reloading after logging in`)
+      mainWindow.reload();
+  });
+}
+
 const createWindow = () => {
   // Create the browser window.
   console.log(path.join(app.getAppPath(), 'preload.js'))
@@ -95,7 +186,7 @@ const createWindow = () => {
     webPreferences: {
       contextIsolation: true,
       preload: path.join(app.getAppPath(), "preload.js")
-  }
+    }
   })
 
   if (process.argv[3] == '--dev') {
@@ -159,8 +250,7 @@ if (!gotTheLock) {
       app.quit();
     } else {
       console.log(`version: ${app.getVersion()}`)
-      await createSettingsJSON();
-      await createErrorsJSON();
+      await Promise.all([createSettingsJSON(), createErrorsJSON(), createUserJSON()])
       createWindow();
       installDolphin();
     }

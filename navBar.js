@@ -1,3 +1,4 @@
+// navBarIndex has the refresh icon whereas navBar does not
 var navBarIndex = `
     <nav class="navbar navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
@@ -12,9 +13,12 @@ var navBarIndex = `
         </div>
     </div>
     <form class="d-flex">
-        <span class="me-3" id="refreshIconOuter"><i class="fa-solid fa-arrows-rotate fa-2x" id="refreshIcon"></i>></span>
+        <span class="me-2" id="refreshIconOuter"><i class="fa-solid fa-arrows-rotate fa-2x" id="refreshIcon"></i>></span>
         <span class="me-3" id="homeIconOuter"><i class="fa-solid fa-house fa-2x" id="homeIcon"></i></span>
-        <span id="settingsIconOuter"><i class="fa-solid fa-gear fa-2x" id="settingsIcon"></i></span>
+        <span class="me-3" id="settingsIconOuter"><i class="fa-solid fa-gear fa-2x" id="settingsIcon"></i></span>
+        <div id="outerLoginDiv">
+            <button type="button" class="btn btn-secondary" id="loginButton">Login with Discord</button>
+        </div>
     </form>
     </div>
     </nav>
@@ -35,12 +39,16 @@ var navBar = `
     </div>
     <form class="d-flex">
         <span class="me-3" id="homeIconOuter"><i class="fa-solid fa-house fa-2x" id="homeIcon"></i></span>
-        <span id="settingsIconOuter"><i class="fa-solid fa-gear fa-2x" id="settingsIcon"></i></span>
+        <span class="me-3" id="settingsIconOuter"><i class="fa-solid fa-gear fa-2x" id="settingsIcon"></i></span>
+        <div id="outerLoginDiv">
+            <button type="button" class="btn btn-secondary" id="loginButton">Login with Discord</button>
+        </div>
     </form>
     </div>
     </nav>
 `
 $(document).ready(function(){
+
     var haveShownSuccessfullUpdateDialog = false;
     var haveShownErrorUpdateDialog = false;
     var currentPage = window.location.href.split('/');
@@ -50,6 +58,28 @@ $(document).ready(function(){
     } else {
         $('body').prepend(navBar)
     }
+
+    // try to get current user
+    axios.get('http://127.0.0.1:8082/getCurrentUser')
+    .then(function (response) {
+        console.log(response.data);
+        const {discordId, discordGlobalName, discordAvatar} = response.data
+        if (discordId.length < 17 || discordId.length > 20) {
+            // not a valid/logged in discord id (default is empty string)
+
+        } else {
+            $('#outerLoginDiv').html(`
+            <img class="img-fluid rounded" src="https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}?size=32"/>
+            <span style="color: white">
+                ${discordGlobalName}
+            </span>
+            `)
+        }
+    })
+    .catch(function (error) {
+        console.log(error);
+    });
+
     $("body").css({'padding-top': $('nav.navbar').height() + 15});
     $('#homeIconOuter').click(function(){
         if (currentPage != "index.html") {
@@ -60,6 +90,9 @@ $(document).ready(function(){
         if (currentPage != "settings.html") {
             window.location.href = "settings.html";
         }
+    })
+    $('#loginButton').click(async function() {
+        await window.api.login()
     })
     $('#dolphinNavLogo').click(function(){
         // call API to open dolphin if we can

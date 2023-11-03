@@ -1,13 +1,11 @@
 const fs = require('fs');
-const unzipper = require('unzipper');
 const unzipStream = require('unzip-stream');
-const etl = require('etl');
 const path = require('path');
 const os = require('os');
 const { exec } = require('child_process');
 const { createHash } = require('crypto');
 const { Stream } = require('stream');
-const { isDev, getDolphinFolderPath, getProcessArgs, getSettingsPath, getErrorsPath } = require("./processWrapper");
+const { isDev, getDolphinFolderPath, getProcessArgs, getSettingsPath, getErrorsPath, getUserConfigPath } = require("./processWrapper");
 const wgetDownload = require("wget-improved");
 const fsExtra = require("fs-extra");
 const { default: axios } = require('axios');
@@ -265,7 +263,7 @@ async function readErrorsFile() {
     try {
       resolve(JSON.parse(fs.readFileSync(getErrorsPath())))
     } catch (err) {
-      console.error(`Error reading erros file: ${err}`);
+      console.error(`Error reading errors file: ${err}`);
       if (err.code == "ENOENT") {
         await createErrorsJSON();
         resolve(JSON.parse(fs.readFileSync(getErrorsPath())))
@@ -283,8 +281,24 @@ async function readSettingsFile() {
     } catch (err) {
       console.error(`Error reading settings file: ${err}`);
       if (err.code == "ENOENT") {
-        await createErrorsJSON();
+        await createSettingsJSON();
         resolve(JSON.parse(fs.readFileSync(getSettingsPath()))) 
+      } else {
+        throw new Error(err);
+      }
+    }
+  })
+}
+
+async function readUserConfigFile() {
+  return new Promise(async function(resolve, reject){
+    try {
+      resolve(JSON.parse(fs.readFileSync(getUserConfigPath()))) 
+    } catch (err) {
+      console.error(`Error reading user file: ${err}`);
+      if (err.code == "ENOENT") {
+        await createUserJSON();
+        resolve(JSON.parse(fs.readFileSync(getUserConfigPath()))) 
       } else {
         throw new Error(err);
       }
@@ -338,6 +352,33 @@ async function createErrorsJSON() {
         // in the future, let's overhaul this function to be responsible for creating and writing to it
         // same with settings file, but don't wanna mess it up before big release
         console.log("The errors file already exists");
+        resolve("done")
+      }
+    });
+  })
+}
+
+async function createUserJSON() {
+  const userConfigPath = getUserConfigPath();
+  return new Promise(function(resolve, reject){
+    fs.open(userConfigPath,'r',function(err, fd){
+      if (err) {
+        var data = {
+          "discordId": "",
+          "discordGlobalName": "",
+          "discordAvatar": "",
+          "jwt": ""
+        }
+        fs.writeFile(userConfigPath, JSON.stringify(data), function(err) {
+            if(err) {
+                console.log(err);
+                resolve("done")
+            }
+            console.log("The user config file was created");
+            resolve("done")
+        });
+      } else {
+        console.log("The user config file already exists");
         resolve("done")
       }
     });
@@ -528,8 +569,10 @@ module.exports.getCitrusFileJSON = getCitrusFileJSON;
 module.exports.startPlayback = startPlayback;
 module.exports.getMD5ISO = getMD5ISO;
 module.exports.readSettingsFile = readSettingsFile;
+module.exports.readUserConfigFile = readUserConfigFile;
 module.exports.createSettingsJSON = createSettingsJSON;
 module.exports.createErrorsJSON = createErrorsJSON;
+module.exports.createUserJSON = createUserJSON;
 module.exports.installDolphin = installDolphin;
 module.exports.openDolphin = openDolphin;
 

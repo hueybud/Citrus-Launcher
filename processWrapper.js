@@ -38,8 +38,17 @@ module.exports.getErrorsPath = function() {
     if (isDev()) {
         return "errors.json"
     } else {
-        const settingsPath = path.join(userDataPath, "errors.json");
-        return settingsPath;
+        const errorsPath = path.join(userDataPath, "errors.json");
+        return errorsPath;
+    }
+}
+
+module.exports.getUserConfigPath = function() {
+    if (isDev()) {
+        return "user.json"
+    } else {
+        const userConfigPath = path.join(userDataPath, "user.json");
+        return userConfigPath;
     }
 }
 

@@ -810,7 +810,7 @@ $(document).ready(function(){
                 return "Dirty European"
             }
 
-            if ((Math.abs(xPos) >= 11.5 && Math.abs(xPos) <= 14) && (yPos >= -6.5 && yPos <= 6.5)) {
+            if ((Math.abs(xPos) >= 11.5 && Math.abs(xPos) <= 14.5) && (yPos >= -6.5 && yPos <= 6.5)) {
                 return "Box Chip"
             }
 
