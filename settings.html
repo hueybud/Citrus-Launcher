@@ -21,7 +21,7 @@
                 <div class="innerContainer">
                     <div class="mb-3">
                         <input type="file" id="smsISOFile" style="display: none;"/>
-                        <label for="smsISOFile" class="whiteText" title="The file location of your Super Mario Strikers ISO (must be the same ISO, not necessarily the same location though, of your recorded gameplay">Super Mario Strikers ISO</label>
+                        <label for="smsISOFile" class="whiteText" title="The file location of your Super Mario Strikers ISO (must be the same ISO, not necessarily the same location though, of your recorded gameplay)">Super Mario Strikers ISO</label>
                         <div class="settingsMagicDiv">
                             <input type="text" class="w-100 settingsInput" id="smsISOFilePath" readonly>
                             <button class="btn btn-secondary" id="smsISOFileButton">Select File</button>
@@ -38,7 +38,8 @@
                     <div class="mb-3">
                         <input type="file" id="replayFolder" style="display: none;" webkitdirectory/>
                         <label for="replayFolder" class="whiteText" title="The folder where the desired .CIT replay files are stored">Replay Folder Location</label>
-                        <div><em class="text-warning">Located at Documents\Dolphin Emulator\Citrus Replays</em></div>
+                        <div><em class="text-warning" id="assumedReplayFolderPath">Located at Documents\Dolphin Emulator\Citrus Replays</em></div>
+                        <div><em class="text-danger">Changing the value of the box does NOT change where replays are saved to.</em></div>
                         <div class="settingsMagicDiv">
                             <input type="text" class="w-100 settingsInput" id="replayFolderPath" readonly>
                             <button class="btn btn-secondary" id="replayFolderButton">Select Folder</button>

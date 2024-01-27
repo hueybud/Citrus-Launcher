@@ -1,4 +1,24 @@
 // navBarIndex has the refresh icon whereas navBar does not
+
+var loginElement = `
+<button type="button" class="btn btn-secondary" id="loginButton">Login with Discord</button>
+` 
+const logoutElement = (discordId, discordAvatar, discordGlobalName) => {
+    return `
+    <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+        <img class="img-fluid rounded" src="https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}?size=32"/>
+        <span style="color: white">
+            ${discordGlobalName}
+        </span>
+        </button>
+        <ul id="profileDropdownOptions" class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+            <li><a class="dropdown-item" id="logoutButton" href="#">Log Out</a></li>
+        </ul>
+    </div>
+    `
+}
+
 var navBarIndex = `
     <nav class="navbar navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
@@ -16,8 +36,8 @@ var navBarIndex = `
         <span class="me-2" id="refreshIconOuter"><i class="fa-solid fa-arrows-rotate fa-2x" id="refreshIcon"></i>></span>
         <span class="me-3" id="homeIconOuter"><i class="fa-solid fa-house fa-2x" id="homeIcon"></i></span>
         <span class="me-3" id="settingsIconOuter"><i class="fa-solid fa-gear fa-2x" id="settingsIcon"></i></span>
-        <div id="outerLoginDiv">
-            <button type="button" class="btn btn-secondary" id="loginButton">Login with Discord</button>
+        <div id="outerLoginDiv" class="me-3">
+            ${loginElement}
         </div>
     </form>
     </div>
@@ -41,7 +61,7 @@ var navBar = `
         <span class="me-3" id="homeIconOuter"><i class="fa-solid fa-house fa-2x" id="homeIcon"></i></span>
         <span class="me-3" id="settingsIconOuter"><i class="fa-solid fa-gear fa-2x" id="settingsIcon"></i></span>
         <div id="outerLoginDiv">
-            <button type="button" class="btn btn-secondary" id="loginButton">Login with Discord</button>
+            ${loginElement}
         </div>
     </form>
     </div>
@@ -68,12 +88,23 @@ $(document).ready(function(){
             // not a valid/logged in discord id (default is empty string)
 
         } else {
+            $('#outerLoginDiv').attr('class', 'me-3')
+            $('#outerLoginDiv').html(logoutElement(discordId, discordAvatar, discordGlobalName))
+            /*
             $('#outerLoginDiv').html(`
-            <img class="img-fluid rounded" src="https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}?size=32"/>
-            <span style="color: white">
-                ${discordGlobalName}
-            </span>
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                <img class="img-fluid rounded" src="https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}?size=32"/>
+                <span style="color: white">
+                    ${discordGlobalName}
+                </span>
+                </button>
+                <ul id="profileDropdownOptions" class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                    <li><a class="dropdown-item" href="#">Log Out</a></li>
+                </ul>
+            </div>
             `)
+            */
         }
     })
     .catch(function (error) {
@@ -91,9 +122,21 @@ $(document).ready(function(){
             window.location.href = "settings.html";
         }
     })
-    $('#loginButton').click(async function() {
+    $(document).on(`click`, '#loginButton', async function() {
         await window.api.login()
     })
+    $(document).on('click', '#logoutButton', async function() {
+        axios.get('http://127.0.0.1:8082/logout')
+        .then(async function(response) {
+            if (response.data.error != undefined) {
+                console.log(`Error logging user out: ${response.data.error}`)
+            } else {
+                $('#outerLoginDiv').attr('class', 'me-3')
+                $('#outerLoginDiv').html(loginElement)
+            }
+        })
+    })
+    
     $('#dolphinNavLogo').click(function(){
         // call API to open dolphin if we can
         // if it fails, show an error dialog

@@ -13,6 +13,8 @@ const log = require("electron-log");
 const { URLSearchParams } = require('url');
 const setProcessArgs = require("./processWrapper").setProcessArgs;
 const setUserDataPath = require("./processWrapper").setUserDataPath;
+const setAppDataPath = require("./processWrapper").setAppDataPath;
+const getCitrusWebBaseEndpoint = require("./processWrapper").getCitrusWebBaseEndpoint;
 const createSettingsJSON = require("./api").createSettingsJSON;
 const createErrorsJSON = require("./api").createErrorsJSON;
 const installDolphin = require("./api").installDolphin;
@@ -24,6 +26,7 @@ var mainWindow;
 console.log(process.argv);
 setProcessArgs(process.argv);
 setUserDataPath(app.getPath("userData"))
+setAppDataPath(app.getPath("appData"));
 
 ipcMain.handle("showDialog", async (event, ...args) => {
   console.log(`Dialog main: ${JSON.stringify(args)}`)
@@ -141,12 +144,12 @@ function authWindow() {
       let jwtRequest;
       try {
         // we should only disabled if we are doing this in dev cuz in reality the mariostrikers.gg endpoint is signed
-        jwtRequest = await axios.post(`https://localhost:3000/citrus/setupUser`, oAuthToken, {httpsAgent: new https.Agent({
+        jwtRequest = await axios.post(`${getCitrusWebBaseEndpoint()}/setupUser`, oAuthToken, {httpsAgent: new https.Agent({
           rejectUnauthorized: false
         })})
         console.log(`Received userId and JWT from server: ${JSON.stringify(jwtRequest.data)}`)
       } catch (err) {
-        console.log(err.message)
+        console.log(`Failed to setup user ${err.message}`)
       }
 
       try {
@@ -170,7 +173,7 @@ function authWindow() {
   authWindow.on('closed', function() {
       authWindow = null;
       console.log(`Reloading after logging in`)
-      mainWindow.reload();
+      mainWindow.loadFile('index.html')
   });
 }
 

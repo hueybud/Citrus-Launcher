@@ -48,6 +48,22 @@ $(document).ready(function(){
                 console.log(err);
             }
         })
+        $.ajax({
+            type: 'GET',
+            url: 'http://127.0.0.1:8082/getAssumedReplaysFolderPath',
+            success: function(data) {
+                console.log(data);
+                var replayFolderPath = data;
+                if (replayFolderPath != "") {
+                    $('#assumedReplayFolderPath').text(`Replays for your system are currently set to be saved at ${replayFolderPath}. Ensure the input box below has the same path unless you wish to view replays from a custom folder.`)
+                } else {
+                    $('#assumedReplayFolderPath').text(`Failed to sync with Dolphin: Replay folder path is assumed to be located at Documents\\Dolphin Emulator\\Citrus Replays`)
+                }
+            },
+            error: function(err) {
+                console.log(err);
+            }
+        })
     }
 
     function updateReplayFolder() {

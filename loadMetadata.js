@@ -273,12 +273,12 @@ function transformReplayIntoElement(metadataJSON, correctFileName) {
     var rightPlayerNamesString = ""
     if (metadataJSON['Left Team Player Info']) {
         for (var i =0; i < metadataJSON['Left Team Player Info'].length; i++) {
-            leftPlayerNamesString += `<p class="playerName surplusStat">${metadataJSON['Left Team Player Info'][i]}</p>`
+            leftPlayerNamesString += `<p class="playerName surplusStat">${metadataJSON['Left Team Player Info'][i][0]}</p>`
         }
     }
     if (metadataJSON['Right Team Player Info']) {
         for (var i =0; i < metadataJSON['Right Team Player Info'].length; i++) {
-            rightPlayerNamesString += `<p class="playerName surplusStat">${metadataJSON['Right Team Player Info'][i]}</p>`
+            rightPlayerNamesString += `<p class="playerName surplusStat">${metadataJSON['Right Team Player Info'][i][0]}</p>`
         }
     }
     let markup =  `

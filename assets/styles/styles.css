@@ -254,3 +254,9 @@ dl, ol, ul {
 #dolphinNavLogo {
     cursor: pointer;
 }
+
+
+#profileDropdownOptions.dropdown-menu {
+    min-width: initial;
+    width: 100%;
+}
