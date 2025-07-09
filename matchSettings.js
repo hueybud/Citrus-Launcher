@@ -41,32 +41,32 @@ $(document).ready(function(){
     var shotInfoMap = new Map([
         ["Corner", {
             "title": "Corner Shot",
-            "videoURL": `<div style="width:100%;height:0px;position:relative;padding-bottom:55.426%;"><iframe src="https://streamable.com/e/axmdi6?autoplay=1" frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay" style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;"></iframe></div>`,
+            "videoURL": `<div style="width:100%;height:0px;position:relative;padding-bottom:55.426%;"><iframe src="https://medal.tv/games/requested/clip/kEw0dV8gRsMtbnqfY?autoplay=1&muted=1&loop=1" frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay" style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;"></iframe></div>`,
             "description": "A fully charged shot taken from the corners near the midfield. Higher percentage success rate than most shots due to the trajectory of the ball getting around Kritter"
         }],
         ["Box Chip", {
             "title": "Box Chip",
-            "videoURL": `<div style="width:100%;height:0px;position:relative;padding-bottom:55.892%;"><iframe src="https://streamable.com/e/quy2le?autoplay=1" frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay" style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;"></iframe></div>`,
+            "videoURL": `<div style="width:100%;height:0px;position:relative;padding-bottom:55.892%;"><iframe src="https://medal.tv/games/requested/clip/kEvwVgm64lvmcn4w1?autoplay=1&muted=1&loop=1" frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay" style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;"></iframe></div>`,
             "description": "A shot taken from the corner of the goalie box. The shooter faces away from the goalie and then does a lob shot, aiming for the opposite post from where they are standing. <br><br> Very high percentage shot on all maps so long as you shoot from the right place. Palace and Konga have the most strict positioning requirements."
         }],
         ["Slide", {
             "title": "Slide Shot",
-            "videoURL": `<div style="width:100%;height:0px;position:relative;padding-bottom:55.426%;"><iframe src="https://streamable.com/e/oeoshk?autoplay=1" frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay" style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;"></iframe></div>`,
+            "videoURL": `<div style="width:100%;height:0px;position:relative;padding-bottom:55.426%;"><iframe src='https://medal.tv/games/requested/clip/kEvwbQwKrbm00BbmI?autoplay=1&muted=1&loop=1' frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay" style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;"></iframe></div>`,
             "description": "A charged shot taken in the goalie box by sliding while charging the shot. Kritter does not move while the ball is charging so the objective is to make an opening while charging."
         }],
         ["LAB", {
             "title": "LAB (Dinker)",
-            "videoURL": `<div style="width:100%;height:0px;position:relative;padding-bottom:55.892%;"><iframe src="https://streamable.com/e/x1s30u?autoplay=1" frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay" style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;"></iframe></div>`,
+            "videoURL": `<div style="width:100%;height:0px;position:relative;padding-bottom:55.892%;"><iframe src="https://medal.tv/games/requested/clip/kEwjDslTS6hw69-5x?autoplay=1&muted=1&loop=1" frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay" style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;"></iframe></div>`,
             "description": "L+A -> B. A lob pass to a teammate which is shot in midair. Low-percentage shot but is relatively safe. The location of the shot is important as LABs done closer to the goal have a better chance of going in."
         }],
         ["European", {
             "title": "European",
-            "videoURL": `<div style="width:100%;height:0px;position:relative;padding-bottom:55.333%;"><iframe src="https://streamable.com/e/qjkyxg?autoplay=1" frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay" style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;"></iframe></div>`,
+            "videoURL": `<div style="width:100%;height:0px;position:relative;padding-bottom:55.333%;"><iframe src="https://medal.tv/games/requested/clip/kEw9exIimrXSzXRw2?autoplay=1&muted=1&loop=1" frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay" style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;"></iframe></div>`,
             "description": "A lob shot taken from the corner near the midfield. The goal is to get the ball to bounce off the post or wall near the goalie and have a nearby teammate kick a goal in."
         }],
         ["Dirty European", {
             "title": "Dirty European",
-            "videoURL": `<div style="width:100%;height:0px;position:relative;padding-bottom:55.705%;"><iframe src="https://streamable.com/e/ushr5e?autoplay=1" frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay" style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;"></iframe></div>`,
+            "videoURL": `<div style="width:100%;height:0px;position:relative;padding-bottom:55.705%;"><iframe src="https://medal.tv/games/requested/clip/kEw11SwQ0R7dx7m90?autoplay=1&muted=1&loop=1" frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay" style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;"></iframe></div>`,
             "description": "A European that goes straight into the goal without needing a rebound."
         }],
 
