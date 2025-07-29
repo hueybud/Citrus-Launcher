@@ -174,7 +174,7 @@ $(document).ready(function(){
         if (statsJSON['Left Team Player Info']) {
             for (var i =0; i < statsJSON['Left Team Player Info'].length; i++) {
                 var pElement = document.createElement('p');
-                pElement.innerHTML = statsJSON['Left Team Player Info'][i];
+                pElement.innerHTML = statsJSON['Left Team Player Info'][i][0];
                 pElement.className = "playerName surplusStat";
                 document.getElementById("leftTeamCharacterContainer").append(pElement);
             }
@@ -183,7 +183,7 @@ $(document).ready(function(){
         if (statsJSON['Right Team Player Info']) {
             for (var i =0; i < statsJSON['Right Team Player Info'].length; i++) {
                 var pElement = document.createElement('p');
-                pElement.innerHTML = statsJSON['Right Team Player Info'][i];
+                pElement.innerHTML = statsJSON['Right Team Player Info'][i][0];
                 pElement.className = "playerName surplusStat";
                 document.getElementById("rightTeamCharacterContainer").append(pElement);
             }
